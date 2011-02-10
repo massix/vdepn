@@ -6,6 +6,7 @@
  */
 
 using Gtk;
+using GLib.Environment;
 
 namespace VDEPN
 {
@@ -16,11 +17,19 @@ namespace VDEPN
 		private VdeParser conf_holder;
 		private List<VdeConfiguration> conf_list;
 		private MenuBar main_menu;
-
+		private string prg_files = get_user_config_dir() + "/vdepn";
+		
 		public ConfigurationsList(string caption)
 		{
 			build_menubar();
-			set_icon_from_file("./v2.png");
+			try {
+				set_icon_from_file(Config.PKGDATADIR + "/share/v2.png");
+			}
+
+			catch (Error e) {
+				Helper.debug(Helper.TAG_ERROR, "Can't find v2.png image in " + Config.PKGDATADIR + "/share/");
+			}
+			
 			main_vbox = new VBox(false, 2);
 			conf_pages = new Notebook();
 			title = caption;
@@ -32,7 +41,7 @@ namespace VDEPN
 				});
 
 			try {
-				conf_holder = new VdeParser("./vdepn.xml");
+				conf_holder = new VdeParser(prg_files + "/connections.xml");
 			}
 			catch (Error e)
 			{
@@ -152,8 +161,14 @@ namespace VDEPN
 		public static void main(string[] args)
 		{
 			Gtk.init(ref args);
-			ConfigurationsList mainWindow = new ConfigurationsList("VDE PN Manager");
+			Helper.debug(Helper.TAG_DEBUG, get_user_data_dir());
+			Helper.debug(Helper.TAG_DEBUG, get_user_config_dir());			
+			set_application_name("VDE PN Manager");
+			set_prgname("VDE PN Manager");
+			string title = get_user_name() + "@" + get_host_name();
+			ConfigurationsList mainWindow = new ConfigurationsList(title + " VDE PN Manager");
 			Gtk.main();
 		}
 	}
 }
+
