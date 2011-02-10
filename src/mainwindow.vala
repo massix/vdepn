@@ -177,17 +177,5 @@ namespace VDEPN
 			status = false;
 			return new Button.with_label("Activate");
 		}
-
-		public static void main(string[] args)
-		{
-			Gtk.init(ref args);
-			Helper.debug(Helper.TAG_DEBUG, get_user_data_dir());
-			Helper.debug(Helper.TAG_DEBUG, get_user_config_dir());
-			set_application_name("VDE PN Manager");
-			set_prgname("VDE PN Manager");
-			string title = get_user_name() + "@" + get_host_name();
-			ConfigurationsList mainWindow = new ConfigurationsList(title + " VDE PN Manager");
-			Gtk.main();
-		}
 	}
 }

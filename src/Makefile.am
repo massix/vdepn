@@ -11,7 +11,7 @@ AM_VALAFLAGS = \
 
 bin_PROGRAMS = vde_manager
 
-vde_manager_SOURCES = mainwindow.vala conf_parser.vala helpers.vala
+vde_manager_SOURCES = mainwindow.vala conf_parser.vala helpers.vala main.vala
 
 vde_manager_LDFLAGS = \
 			$(GLIB_LIBS) \
