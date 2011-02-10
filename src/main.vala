@@ -64,9 +64,9 @@ namespace VDEPN
 			File prog_dir = File.new_for_path(get_user_config_dir() + "/vdepn");
 			File prog_xml = File.new_for_path(get_user_config_dir() + "/vdepn/connections.xml");
 			// Configuration dir exists..
-			if (prog_dir.query_exists()) {
+			if (prog_dir.query_exists(null)) {
 				Helper.debug(Helper.TAG_DEBUG, "Configuration dir exists");
-				if (prog_xml.query_exists())
+				if (prog_xml.query_exists(null))
 					Helper.debug(Helper.TAG_DEBUG, "Configuration file exists");
 
 				// ..but it hasn't got a connectons.xml file!

@@ -139,8 +139,8 @@ namespace VDEPN
 				conf_pages.append_page(conf_table, new Label(conn_name));
 			}
 
-			main_vbox.pack_start(main_menu);
-			main_vbox.pack_end(conf_pages);
+			main_vbox.pack_start(main_menu, true, true, 0);
+			main_vbox.pack_end(conf_pages, true, true, 0);
 			add(main_vbox);
 			show_all();
 		}
