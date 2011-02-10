@@ -17,16 +17,9 @@
  *
  */
 
-namespace VDEPN {
-	public class Helper : GLib.Object
-	{
-		public const string TAG_DEBUG = "DEBUG";
-		public const string TAG_ERROR = "ERROR";
-		public const string TAG_WARNING = "WARNING";
-		
-		public static void debug(string tag, string message)
-		{
-			stdout.printf("[%s] %s\n", tag, message);
-		}
-	}
+[CCode (cprefix = "", lower_case_cprefix = "", cheader_filename = "config.h")]
+namespace Config {
+	public const string VERSION;
+	public const string PKGDATADIR;
 }
+
