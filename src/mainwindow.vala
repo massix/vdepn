@@ -71,6 +71,12 @@ namespace VDEPN
 				Label socket_label = new Label("Socket path: ");
 				Entry socket_entry = new Entry();
 
+				CheckButton button_ssh = new CheckButton.with_label("Use SSH keys");
+				CheckButton button_root = new CheckButton.with_label("Needs root");
+
+				button_ssh.active = v.use_keys;
+				button_root.active = v.root_required;
+				
 				Button activate_connection = get_button(v, out button_status);
 
 				activate_connection.clicked.connect(
@@ -113,6 +119,9 @@ namespace VDEPN
 				conf_table.attach_defaults(socket_label, 0, 1, 3, 4);
 				conf_table.attach_defaults(socket_entry, 1, 2, 3, 4);
 
+				conf_table.attach_defaults(button_ssh, 0, 1, 4, 5);
+				conf_table.attach_defaults(button_root, 1, 2, 4, 5);
+				
 				conf_table.attach_defaults(activate_connection, 0, 2, 6, 7);
 
 				conf_pages.append_page(conf_table, new Label(conn_name));
