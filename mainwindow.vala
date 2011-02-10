@@ -20,6 +20,7 @@ namespace VDEPN
 		public ConfigurationsList(string caption)
 		{
 			build_menubar();
+			set_icon_from_file("./v2.png");
 			main_vbox = new VBox(false, 2);
 			conf_pages = new Notebook();
 			title = caption;
@@ -66,11 +67,13 @@ namespace VDEPN
 				activate_connection.clicked.connect(
 					(ev) => {
 						if (button_status == false) {
-							activate_connection.label = "Deactivate";							
+							// Activate Connection
+							activate_connection.label = "Deactivate";
 							Helper.debug(Helper.TAG_DEBUG, "Activated Connection " + conn_name);
 							button_status = true;
 						}
 						else {
+							// Deactivate Connection
 							activate_connection.label = "Activate";
 							Helper.debug(Helper.TAG_DEBUG, "Deactivated Connection " + conn_name);
 							button_status = false;
@@ -112,7 +115,8 @@ namespace VDEPN
 			show_all();
 		}
 
-		private void build_menubar() {
+		private void build_menubar()
+		{
 			main_menu = new MenuBar();
 
 			// file
@@ -145,7 +149,8 @@ namespace VDEPN
 		}
 
 
-		public static void main(string[] args) {
+		public static void main(string[] args)
+		{
 			Gtk.init(ref args);
 			ConfigurationsList mainWindow = new ConfigurationsList("VDE PN Manager");
 			Gtk.main();
