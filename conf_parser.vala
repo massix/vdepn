@@ -96,24 +96,23 @@ namespace VDEPN
 					required = conf_node->has_prop("required");
 					usekeys = conf_node->has_prop("usekeys");
 					if ((required != null) && (required->children->get_content() == "no")) {
-						if ((usekeys != null) && (usekeys->children->get_content() == "yes")) 
+						if ((usekeys != null) && (usekeys->children->get_content() == "yes"))
 							use_keys = true;
-						
-						else 
+
+						else
 							use_keys = false;
-						
+
 					}
-					else 
+					else
 						password = conf_node->get_content();
-					
+
 					break;
 				default:
 					throw new VDEConfigurationError.UNRECOGNIZED_OPTION("Option not known");
-					break;
 				}
 
 			}
-			
+
 			if (socket_path == null)
 				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS("field sockpath is missing");
 			if (machine == null)
