@@ -17,10 +17,14 @@
  *
  */
 
-[CCode (cprefix = "", lower_case_cprefix = "", cheader_filename = "config.h")]
-namespace Config {
-	public const string PACKAGE_VERSION;
-	public const string PACKAGE_NAME;
-	public const string PKGDATADIR;
+namespace VDEPN.Connector
+{
+	public static bool create_vde_switch(string path) {
+		// testing out processes
+		string[] test = {"/bin/echo", path, null};
+		Pid test_pid;
+		Helper.debug(Helper.TAG_DEBUG, "Spawning a test process");
+		Process.spawn_async(null, test, null, SpawnFlags.DO_NOT_REAP_CHILD, null, out test_pid);
+		return true;
+	}
 }
-

@@ -63,13 +63,17 @@ namespace VDEPN
 		{
 			File prog_dir = File.new_for_path(get_user_config_dir() + "/vdepn");
 			File prog_xml = File.new_for_path(get_user_config_dir() + "/vdepn/connections.xml");
+
+			// This is just a test
+			VDEPN.Connector.create_vde_switch("/tmp/test");
+
 			// Configuration dir exists..
 			if (prog_dir.query_exists(null)) {
 				Helper.debug(Helper.TAG_DEBUG, "Configuration dir exists");
 				if (prog_xml.query_exists(null))
 					Helper.debug(Helper.TAG_DEBUG, "Configuration file exists");
 
-				// ..but it hasn't got a connectons.xml file!
+				// ..but it hasn't got a connections.xml file!
 				else {
 					Helper.debug(Helper.TAG_DEBUG, "Creating new default connections file");
 					Doc conf = default_configuration();

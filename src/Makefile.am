@@ -1,7 +1,8 @@
-AM_CPPFLAGS = 	$(OS_CFLAGS) \
-				$(GLIB_CFLAGS) \
-				$(GTK_CFLAGS) \
-				$(LIBXML_CFLAGS)
+AM_CPPFLAGS = \
+			$(OS_CFLAGS) \
+			$(GLIB_CFLAGS) \
+			$(GTK_CFLAGS) \
+			$(LIBXML_CFLAGS)
 
 AM_VALAFLAGS = \
 			--pkg libxml-2.0 \
@@ -11,7 +12,12 @@ AM_VALAFLAGS = \
 
 bin_PROGRAMS = vde_manager
 
-vde_manager_SOURCES = mainwindow.vala conf_parser.vala helpers.vala main.vala
+vde_manager_SOURCES = \
+			mainwindow.vala \
+			conf_parser.vala \
+			helpers.vala \
+			main.vala \
+			vde_connector.vala
 
 vde_manager_LDFLAGS = \
 			$(GLIB_LIBS) \

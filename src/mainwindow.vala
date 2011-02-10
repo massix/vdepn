@@ -169,7 +169,44 @@ namespace VDEPN
 
 			file_item.submenu = file_menu;
 
+			// help
+			Menu help_menu = new Menu();
+			MenuItem help_item = new MenuItem.with_label("Help");
+			MenuItem about_item = new MenuItem.with_label("About");
+			help_menu.append(about_item);
+
+			about_item.activate.connect(
+				(ev) => {
+					AboutDialog about = new AboutDialog();
+					about.authors = {"Massimo Gengarelli"};
+					about.copyright = "(C) 2011 Massimo Gengarelli";
+					about.license = "GPL v3";
+					about.program_name = Config.PACKAGE_NAME;
+					about.version = Config.PACKAGE_VERSION;
+					about.website = "http://git.casafamelica.info/vdepn.git";
+					try {
+						about.logo = new Gdk.Pixbuf.from_file(Config.PKGDATADIR + "/share/v2_big.png");
+					}
+					catch (Error e) {
+						Helper.debug(Helper.TAG_ERROR, "Error while retrieving logo image");
+					}
+					about.close.connect(
+						(ev) => {
+							Helper.debug(Helper.TAG_DEBUG, "Close dialog");
+							about.destroy();
+						});
+					about.response.connect(
+						(ev) => {
+							Helper.debug(Helper.TAG_DEBUG, "Response (close)");
+							about.destroy();
+						});
+					about.run();
+				});
+
+			help_item.submenu = help_menu;
+			
 			main_menu.append(file_item);
+			main_menu.append(help_item);
 		}
 
 		private Button get_button(VdeConfiguration c, out bool status)
