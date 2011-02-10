@@ -1,0 +1,29 @@
+<vdemanager>
+  <connection id="faculty" root="yes">
+	<sockpath>/var/run/vde-fac</sockpath>
+	<ipaddress dhcp="yes" />
+	<user>gengarel</user>
+	<machine>130.136.200.108</machine>
+	<password required="no" usekeys="yes" />
+  </connection>
+  <connection id="test" root="no">
+	<sockpath>/home/massi/test-vpn</sockpath>
+	<ipaddress>10.0.21.1</ipaddress>
+	<machine>vde2.v2.cs.unibo.it</machine>
+	<user>vde0</user>
+	<password required="yes">test</password>
+  </connection>
+  <connection root="no">
+  </connection>
+  <connection id="no-sockpath" root="yes">
+	<sockpath>/tmp/mysockpath</sockpath>
+	<ipaddress dhcp="yes" />
+	<user>gengarel</user>
+	<machine>192.168.1.42</machine>
+	<password required="no" />
+  </connection>
+  <connection id="othertest" root="yes">
+	<sockpath>/home/massi/test_due_vpn</sockpath>
+	<ipaddress dhcp="no">192.168.100.3</ipaddress>
+  </connection>
+</vdemanager>
