@@ -228,8 +228,27 @@ namespace VDEPN
 						return;
 					}
 					else {
-						VDEConfiguration rem = conf_list.nth_data(conn_id);
-						Helper.debug(Helper.TAG_DEBUG, "Remove connection " + rem.connection_name);
+						Dialog confirm = new Dialog.with_buttons("Connection removal", this, DialogFlags.MODAL);
+						confirm.vbox.add(new Label("This cannot be undone!"));
+						confirm.add_button("Yes, I'm sure", 0);
+						confirm.add_button("Abort", 1);
+						confirm.vbox.show_all();
+						confirm.close.connect((ev) => { confirm.destroy(); });
+						confirm.response.connect(
+							(ev, resp) => {
+								if (resp == 1)
+									confirm.destroy();
+								else {
+									VDEConfiguration rem = conf_list.nth_data(conn_id);
+									Helper.debug(Helper.TAG_DEBUG, "Remove connection " + rem.connection_name);
+									conf_holder.update_file(null, rem, true);
+									conf_list.remove(rem);
+									conf_pages.next_page();
+									conf_pages.remove_page(conn_id);
+									confirm.destroy();
+								}
+							});
+						confirm.run();
 					}
 				});
 

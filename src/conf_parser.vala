@@ -162,6 +162,15 @@ namespace VDEPN
 			use_keys = new_ssh_keys;
 		}
 
+		/* Since in Vala there's no methods overloading, this function
+		 * may look strange. It is responsible of converting an
+		 * existing VDEConfiguration into an Xml NodeList and return
+		 * it if was the VDEParser to ask it, or invoke the VDEParser
+		 * returning null (in this way, the UI will call this function
+		 * to start the updating of the configuration file, and then
+		 * the Parser just takes the NodeList of each configuration it
+		 * has)
+		 */
 		public Xml.Node* store_configuration(VDEParser? p) {
 			Xml.Node *root_node = new Xml.Node(null, "connection");
 			root_node->set_prop("id", connection_name);
@@ -191,7 +200,7 @@ namespace VDEPN
 			root_node->add_child(password_node);
 
 			if (p != null) {
-				p.update_file(root_node, this);
+				p.update_file(root_node, this, false);
 				return null;
 			}
 			else
@@ -236,21 +245,41 @@ namespace VDEPN
 				}
 			}
 		}
-		public void update_file(Xml.Node *new_conn_root_node, VDEConfiguration v) {
+
+		public void update_file(Xml.Node *new_conn_root_node, VDEConfiguration v, bool rem_conf) {
 			Doc new_conf = new Doc();
 			int index = configurations.index(v);
-			string conf_id = new_conn_root_node->has_prop("id")->children->content;
+			string conf_id;
+			if (new_conn_root_node != null)
+				conf_id = new_conn_root_node->has_prop("id")->children->content;
+			else
+				conf_id = "NONEXISTANTCONFIGURATION";
+
 			Xml.Node *root_elem = new Xml.Node(null, "vdemanager");
 
 			new_conf.set_root_element(root_elem);
 
-			root_elem->add_child(new_conn_root_node);
+			/* segfaults */
+			if (new_conn_root_node != null)
+				root_elem->add_child(new_conn_root_node);
+
 			if (index < 0) {
-				Helper.debug(Helper.TAG_DEBUG, "Appending new configuration to configurations list");
-				configurations.append(v);
+				if (!rem_conf) {
+					Helper.debug(Helper.TAG_DEBUG, "Appending new configuration to configurations list");
+					configurations.append(v);
+				}
+				else
+					Helper.debug(Helper.TAG_WARNING, "Configuration to be removed wasn't in the configurations list");
 			}
-			else
-				Helper.debug(Helper.TAG_DEBUG, "Configuration was already in the configurations list");
+
+			else {
+				if (!rem_conf)
+					Helper.debug(Helper.TAG_WARNING, "Configuration was already in the configurations list");
+				else {
+					Helper.debug(Helper.TAG_DEBUG, "Removing the configuration");
+					configurations.remove(v);
+				}
+			}
 
 			Helper.debug(Helper.TAG_DEBUG, "updating file");
 			foreach (VDEConfiguration v_conf in configurations) {
