@@ -67,11 +67,12 @@ namespace VDEPN
 			foreach (VdeConfiguration v in conf_list) {
 				// build a notebook page for each configuration
 				bool button_status = false;
-				Table conf_table = new Table(7, 2, true);
+				Table conf_table = new Table(8, 2, true);
 				string conn_name = v.connection_name;
 				string conn_machine = v.machine;
 				string conn_user = v.user;
 				string conn_socket = v.socket_path;
+				string conn_ipaddr = v.ip_address;
 
 				Label conn_name_label = new Label("Connection name: ");
 				Entry conn_name_entry = new Entry();
@@ -84,6 +85,9 @@ namespace VDEPN
 
 				Label socket_label = new Label("Socket path: ");
 				Entry socket_entry = new Entry();
+
+				Label ipaddr_label = new Label("TUN Interface IPv4: ");
+				Entry ipaddr_entry = new Entry();
 
 				CheckButton button_ssh = new CheckButton.with_label("Use SSH keys");
 				CheckButton button_root = new CheckButton.with_label("Needs root");
@@ -142,6 +146,9 @@ namespace VDEPN
 				socket_entry.editable = false;
 				socket_entry.text = conn_socket;
 
+				ipaddr_entry.editable = false;
+				ipaddr_entry.text = conn_ipaddr;
+
 				conf_table.attach_defaults(conn_name_label, 0, 1, 0, 1);
 				conf_table.attach_defaults(conn_name_entry, 1, 2, 0, 1);
 
@@ -154,10 +161,13 @@ namespace VDEPN
 				conf_table.attach_defaults(socket_label, 0, 1, 3, 4);
 				conf_table.attach_defaults(socket_entry, 1, 2, 3, 4);
 
-				conf_table.attach_defaults(button_ssh, 0, 1, 4, 5);
-				conf_table.attach_defaults(button_root, 1, 2, 4, 5);
+				conf_table.attach_defaults(ipaddr_label, 0, 1, 4, 5);
+				conf_table.attach_defaults(ipaddr_entry, 1, 2, 4, 5);
 
-				conf_table.attach_defaults(activate_connection, 0, 2, 6, 7);
+				conf_table.attach_defaults(button_ssh, 0, 1, 5, 6);
+				conf_table.attach_defaults(button_root, 1, 2, 5, 6);
+
+				conf_table.attach_defaults(activate_connection, 0, 2, 7, 8);
 
 				conf_pages.append_page(conf_table, new Label(conn_name));
 			}

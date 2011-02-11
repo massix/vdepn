@@ -74,6 +74,8 @@ namespace VDEPN.Manager
 		private string vde_plug_cmd;
 		private string dpipe_cmd;
 		private string pidfile_path;
+		private string iface;
+		private string ip_addr;
 		private int vde_switch_pid;
 
 		public VDEConnection(string conn_id) throws ConnectorError {
@@ -95,6 +97,7 @@ namespace VDEPN.Manager
 
 			vde_switch_path = path;
 			this.conn_id = conn_id;
+			iface = "vdepn-" + conn_id;
 		}
 
 		private void get_paths() {

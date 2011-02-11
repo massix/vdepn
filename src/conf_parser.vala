@@ -131,6 +131,8 @@ namespace VDEPN
 				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS("field machine is missing");
 			if (user == null)
 				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS("field user is missing");
+			if (ip_address == null)
+				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS("ip address is missing");
 			if ((password == null) && (use_keys == false))
 				Helper.debug(Helper.TAG_WARNING, "configuration with empty password set");
 
