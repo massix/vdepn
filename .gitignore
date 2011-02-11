@@ -19,3 +19,6 @@ src/Makefile
 *.o
 src/vde_manager
 *.stamp
+Makefile
+*.xml
+INSTALL
