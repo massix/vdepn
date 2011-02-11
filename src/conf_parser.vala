@@ -205,8 +205,6 @@ namespace VDEPN
 			}
 			else
 				return root_node;
-
-			Helper.debug(Helper.TAG_DEBUG, "Storing configuration");
 		}
 	}
 

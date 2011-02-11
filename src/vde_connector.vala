@@ -92,70 +92,78 @@ namespace VDEPN.Manager
 		private string pkexec_cmd;
 		private string dpipe_cmd;
 		private string ifconfig_cmd;
-		private string pidfile_path;
 		private string iface;
 		private string ip_addr;
 		private int vde_switch_pid;
 
 		public VDEConnection.from_pid_file(string conn_id) {
-			string pidtmp;
-			this.conn_id = conn_id;
-			GLib.FileUtils.get_contents("/tmp/vdepn-" + conn_id + ".pid", out pidtmp);
-			vde_switch_pid = pidtmp.to_int();
-			Helper.debug(Helper.TAG_DEBUG, "Grabbed pid " + vde_switch_pid.to_string());
+			try {
+				string pidtmp;
+				this.conn_id = conn_id;
+				GLib.FileUtils.get_contents("/tmp/vdepn-" + conn_id + ".pid", out pidtmp);
+				vde_switch_pid = pidtmp.to_int();
+				Helper.debug(Helper.TAG_DEBUG, "Grabbed pid " + vde_switch_pid.to_string());
+			}
+			catch (Error e) {
+				Helper.debug(Helper.TAG_ERROR, e.message);
+			}
 		}
 
 		public VDEConnection.with_path(string path, string conn_id,
 									   string user, string machine,
 									   string ipaddr) throws ConnectorError {
-			string script;
-			string temp_file;
+			try {
+				string script;
+				string temp_file;
 
-			GLib.FileUtils.open_tmp("vdepn-XXXXXX.sh", out temp_file);
+				GLib.FileUtils.open_tmp("vdepn-XXXXXX.sh", out temp_file);
 
+				get_paths();
 
+				if (
+					(vde_switch_cmd == null) ||
+					(vde_plug_cmd == null) ||
+					(dpipe_cmd == null))
+					throw new ConnectorError.COMMAND_NOT_FOUND("VDE not fully installed");
 
-			get_paths();
+				if (pkexec_cmd == null)
+					throw new ConnectorError.COMMAND_NOT_FOUND("pkexec not found, root unavailable");
 
-			if (
-				(vde_switch_cmd == null) ||
-				(vde_plug_cmd == null) ||
-				(dpipe_cmd == null))
-				throw new ConnectorError.COMMAND_NOT_FOUND("VDE not fully installed");
+				if (pgrep_cmd == null)
+					throw new ConnectorError.COMMAND_NOT_FOUND("pgrep not found, can't kill the switches");
 
-			if (pkexec_cmd == null)
-				throw new ConnectorError.COMMAND_NOT_FOUND("pkexec not found, root unavailable");
+				if (ifconfig_cmd == null)
+					throw new ConnectorError.COMMAND_NOT_FOUND("ifconfig not found, can't set up interface");
 
-			if (pgrep_cmd == null)
-				throw new ConnectorError.COMMAND_NOT_FOUND("pgrep not found, can't kill the switches");
+				vde_switch_path = path;
+				this.conn_id = conn_id;
+				this.ip_addr = ipaddr;
+				iface = "vdepn-" + conn_id;
 
-			if (ifconfig_cmd == null)
-				throw new ConnectorError.COMMAND_NOT_FOUND("ifconfig not found, can't set up interface");
+				script = "#!/bin/sh\n\n" +
+					vde_switch_cmd + " -d -t " + iface + " -s " + path + "\n" +
+					pgrep_cmd + " -n vde_switch > /tmp/vdepn-" + conn_id + ".pid\n" +
+					dpipe_cmd + " ssh -o StrictHostKeyChecking=no " + user + "@" + machine + " vde_plug " +
+					"= " + vde_plug_cmd + " " + path + " &\n" +
+					ifconfig_cmd + " " + iface + " " + ipaddr + " up\n";
 
-			vde_switch_path = path;
-			this.conn_id = conn_id;
-			iface = "vdepn-" + conn_id;
+				GLib.FileUtils.set_contents(temp_file, script, -1);
+				GLib.FileUtils.chmod(temp_file, 0700);
+				Helper.debug(Helper.TAG_DEBUG, "Saved script in " + temp_file);
+				Helper.debug(Helper.TAG_DEBUG, "Launching script with pkexec");
+				string command = pkexec_cmd + " " + temp_file;
+				Process.spawn_command_line_sync(command, null, null, null);
 
-			script = "#!/bin/sh\n\n" +
-				vde_switch_cmd + " -d -t " + iface + " -s " + path + "\n" +
-				pgrep_cmd + " -n vde_switch > /tmp/vdepn-" + conn_id + ".pid\n" +
-				dpipe_cmd + " ssh -o StrictHostKeyChecking=no " + user + "@" + machine + " vde_plug " +
-				"= " + vde_plug_cmd + " " + path + " &\n" +
-				ifconfig_cmd + " " + iface + " " + ipaddr + " up\n";
-
-			GLib.FileUtils.set_contents(temp_file, script, -1);
-			GLib.FileUtils.chmod(temp_file, 0700);
-			Helper.debug(Helper.TAG_DEBUG, "Saved script in " + temp_file);
-			Helper.debug(Helper.TAG_DEBUG, "Launching script with pkexec");
-			string command = pkexec_cmd + " " + temp_file;
-			Process.spawn_command_line_sync(command, null, null, null);
-
-			GLib.FileUtils.unlink(temp_file);
-			Helper.debug(Helper.TAG_DEBUG, "Unlinked temp file");
-			string pidtmp;
-			GLib.FileUtils.get_contents("/tmp/vdepn-" + conn_id + ".pid", out pidtmp, null);
-			vde_switch_pid = pidtmp.to_int();
-			Helper.debug(Helper.TAG_DEBUG, "vde switch pid: " + vde_switch_pid.to_string());
+				GLib.FileUtils.unlink(temp_file);
+				Helper.debug(Helper.TAG_DEBUG, "Unlinked temp file");
+				string pidtmp;
+				GLib.FileUtils.get_contents("/tmp/vdepn-" + conn_id + ".pid", out pidtmp, null);
+				vde_switch_pid = pidtmp.to_int();
+				Helper.debug(Helper.TAG_DEBUG, "vde switch pid: " + vde_switch_pid.to_string());
+			}
+			catch (Error e) {
+				Helper.debug(Helper.TAG_ERROR, e.message);
+			}
 		}
 
 		private void get_paths() {
@@ -207,17 +215,34 @@ namespace VDEPN.Manager
 		}
 
 		public bool destroy_connection() {
-			string command;
-			Helper.debug(Helper.TAG_DEBUG,
-						 "Removing connection with pid: /tmp/vdepn-" +
-						 conn_id + ".pid");
-			get_paths();
+			try {
+				string script;
+				string temp_file;
+				Helper.debug(Helper.TAG_DEBUG,
+							 "Removing connection with pid: /tmp/vdepn-" +
+							 conn_id + ".pid");
+				get_paths();
 
-			command = pkexec_cmd + " kill -9 " + vde_switch_pid.to_string();
+				GLib.FileUtils.open_tmp("kill-vdepn-XXXXXX.sh", out temp_file);
 
-			Process.spawn_command_line_sync(command, null, null, null);
+				script = "#!/bin/sh\n\n";
+				script += "kill -9 " + vde_switch_pid.to_string() + "\n";
+				script += "rm -f /tmp/vdepn-" + conn_id + ".pid\n";
 
-			return true;
+				GLib.FileUtils.set_contents(temp_file, script, -1);
+
+				GLib.FileUtils.chmod(temp_file, 0700);
+
+				Process.spawn_command_line_sync(pkexec_cmd + " " + temp_file, null, null, null);
+
+				GLib.FileUtils.unlink(temp_file);
+
+				return true;
+			}
+			catch (Error e) {
+				Helper.debug(Helper.TAG_ERROR, e.message);
+				return false;
+			}
 		}
 	}
 }
