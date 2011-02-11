@@ -20,7 +20,8 @@
 namespace VDEPN.Manager
 {
 	public errordomain ConnectorError {
-		COMMAND_NOT_FOUND
+		COMMAND_NOT_FOUND,
+		CONNECTION_FAILED
 	}
 
 	public class VDEConnector
@@ -38,6 +39,7 @@ namespace VDEPN.Manager
 					return false;
 				}
 			}
+
 			try {
 				VDEConnection new_one = new VDEConnection.with_path(socket_path, id);
 				Helper.debug(Helper.TAG_DEBUG, "Creating new connection");
@@ -90,6 +92,7 @@ namespace VDEPN.Manager
 				(vde_plug_cmd == null) ||
 				(dpipe_cmd == null))
 				throw new ConnectorError.COMMAND_NOT_FOUND("VDE not fully installed");
+
 			vde_switch_path = path;
 			this.conn_id = conn_id;
 		}
@@ -99,24 +102,29 @@ namespace VDEPN.Manager
 			string cmd_result;
 			string[] tmp_split;
 
-			command = "whereis vde_switch";
-			Process.spawn_command_line_sync(command, out cmd_result, null, null);
-			tmp_split = cmd_result.split(": ", 0);
-			vde_switch_cmd = tmp_split[1].chomp();
+			try {
+				command = "whereis vde_switch";
+				Process.spawn_command_line_sync(command, out cmd_result, null, null);
+				tmp_split = cmd_result.split(": ", 0);
+				vde_switch_cmd = tmp_split[1].chomp();
 
-			command = "whereis vde_plug";
-			Process.spawn_command_line_sync(command, out cmd_result, null, null);
-			tmp_split = cmd_result.split(": ", 0);
-			vde_plug_cmd = tmp_split[1].chomp();
+				command = "whereis vde_plug";
+				Process.spawn_command_line_sync(command, out cmd_result, null, null);
+				tmp_split = cmd_result.split(": ", 0);
+				vde_plug_cmd = tmp_split[1].chomp();
 
-			command = "whereis dpipe";
-			Process.spawn_command_line_sync(command, out cmd_result, null, null);
-			tmp_split = cmd_result.split(": ", 0);
-			dpipe_cmd = tmp_split[1].chomp();
+				command = "whereis dpipe";
+				Process.spawn_command_line_sync(command, out cmd_result, null, null);
+				tmp_split = cmd_result.split(": ", 0);
+				dpipe_cmd = tmp_split[1].chomp();
 
-			Helper.debug(Helper.TAG_DEBUG, "vde_switch is at " + vde_switch_cmd);
-			Helper.debug(Helper.TAG_DEBUG, "vde_plug   is at " + vde_plug_cmd);
-			Helper.debug(Helper.TAG_DEBUG, "dpipe      is at " + dpipe_cmd);
+				Helper.debug(Helper.TAG_DEBUG, "vde_switch is at " + vde_switch_cmd);
+				Helper.debug(Helper.TAG_DEBUG, "vde_plug   is at " + vde_plug_cmd);
+				Helper.debug(Helper.TAG_DEBUG, "dpipe      is at " + dpipe_cmd);
+			}
+			catch (GLib.SpawnError e) {
+				Helper.debug(Helper.TAG_ERROR, e.message);
+			}
 		}
 
 		public void destroy_connection() {
