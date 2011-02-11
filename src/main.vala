@@ -64,9 +64,6 @@ namespace VDEPN
 			File prog_dir = File.new_for_path(get_user_config_dir() + "/vdepn");
 			File prog_xml = File.new_for_path(get_user_config_dir() + "/vdepn/connections.xml");
 
-			// This is just a test
-			VDEPN.Connector.create_vde_switch("/tmp/test");
-
 			// Configuration dir exists..
 			if (prog_dir.query_exists(null)) {
 				Helper.debug(Helper.TAG_DEBUG, "Configuration dir exists");

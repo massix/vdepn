@@ -30,9 +30,11 @@ namespace VDEPN
 		private List<VdeConfiguration> conf_list;
 		private MenuBar main_menu;
 		private string prg_files = get_user_config_dir() + "/vdepn";
+		private Manager.VDEConnector connections_manager;
 
 		public ConfigurationsList(string caption)
 		{
+			connections_manager = new Manager.VDEConnector();
 			build_menubar();
 			try {
 				set_icon_from_file(Config.PKGDATADIR + "/share/v2.png");
@@ -97,12 +99,14 @@ namespace VDEPN
 							// Activate Connection
 							activate_connection.label = "Deactivate";
 							Helper.debug(Helper.TAG_DEBUG, "Activated Connection " + conn_name);
+							connections_manager.new_connection(conn_socket, conn_name);
 							button_status = true;
 						}
 						else {
 							// Deactivate Connection
 							activate_connection.label = "Activate";
 							Helper.debug(Helper.TAG_DEBUG, "Deactivated Connection " + conn_name);
+							connections_manager.rm_connection(conn_name);
 							button_status = false;
 						}
 					});
