@@ -19,26 +19,34 @@
 
 namespace VDEPN.Manager
 {
+	public errordomain ConnectorError {
+		COMMAND_NOT_FOUND
+	}
+
 	public class VDEConnector
 	{
 		private List<VDEConnection> active_connections;
 
 		public VDEConnector() {
-			 active_connections = new List<VDEConnection>();
+			active_connections = new List<VDEConnection>();
 		}
 
-		public bool new_connection(string socket_path, string id) {
+		public bool new_connection(string socket_path, string id) throws ConnectorError {
 			foreach (VDEConnection c in active_connections) {
 				if (c.conn_id == id) {
 					Helper.debug(Helper.TAG_ERROR, "Connection is still alive");
 					return false;
 				}
 			}
-
-			VDEConnection new_one = new VDEConnection.with_path(socket_path, id);
-			Helper.debug(Helper.TAG_DEBUG, "Creating new connection");
-			active_connections.append(new_one);
-			return true;
+			try {
+				VDEConnection new_one = new VDEConnection.with_path(socket_path, id);
+				Helper.debug(Helper.TAG_DEBUG, "Creating new connection");
+				active_connections.append(new_one);
+				return true;
+			}
+			catch (ConnectorError e) {
+				throw e;
+			}
 		}
 
 		public bool rm_connection(string id) {
@@ -66,24 +74,50 @@ namespace VDEPN.Manager
 		private string pidfile_path;
 		private int vde_switch_pid;
 
-		public VDEConnection(string conn_id) {
-			this.with_path("/tmp/unnamed", conn_id);
+		public VDEConnection(string conn_id) throws ConnectorError {
+			try {
+				this.with_path("/tmp/unnamed", conn_id);
+			}
+			catch (ConnectorError e) {
+				throw e;
+			}
 		}
 
-		public VDEConnection.with_path(string path, string conn_id) {
-			string command;
-			string cmd_result;
+		public VDEConnection.with_path(string path, string conn_id) throws ConnectorError {
+			get_paths();
+			if (
+				(vde_switch_cmd == null) ||
+				(vde_plug_cmd == null) ||
+				(dpipe_cmd == null))
+				throw new ConnectorError.COMMAND_NOT_FOUND("VDE not fully installed");
 			vde_switch_path = path;
 			this.conn_id = conn_id;
+		}
+
+		private void get_paths() {
+			string command;
+			string cmd_result;
+			string[] tmp_split;
 
 			command = "whereis vde_switch";
 			Process.spawn_command_line_sync(command, out cmd_result, null, null);
-			string[] tmp_split = cmd_result.split(": ", 0);
+			tmp_split = cmd_result.split(": ", 0);
 			vde_switch_cmd = tmp_split[1].chomp();
 
-			Helper.debug(Helper.TAG_DEBUG, vde_switch_cmd);
-		}
+			command = "whereis vde_plug";
+			Process.spawn_command_line_sync(command, out cmd_result, null, null);
+			tmp_split = cmd_result.split(": ", 0);
+			vde_plug_cmd = tmp_split[1].chomp();
 
+			command = "whereis dpipe";
+			Process.spawn_command_line_sync(command, out cmd_result, null, null);
+			tmp_split = cmd_result.split(": ", 0);
+			dpipe_cmd = tmp_split[1].chomp();
+
+			Helper.debug(Helper.TAG_DEBUG, "vde_switch is at " + vde_switch_cmd);
+			Helper.debug(Helper.TAG_DEBUG, "vde_plug   is at " + vde_plug_cmd);
+			Helper.debug(Helper.TAG_DEBUG, "dpipe      is at " + dpipe_cmd);
+		}
 
 		public void destroy_connection() {
 			Helper.debug(Helper.TAG_DEBUG, "Will do it soon..");

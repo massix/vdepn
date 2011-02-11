@@ -97,10 +97,29 @@ namespace VDEPN
 					(ev) => {
 						if (button_status == false) {
 							// Activate Connection
-							activate_connection.label = "Deactivate";
-							Helper.debug(Helper.TAG_DEBUG, "Activated Connection " + conn_name);
-							connections_manager.new_connection(conn_socket, conn_name);
-							button_status = true;
+							try {
+								Helper.debug(Helper.TAG_DEBUG, "Activated Connection " + conn_name);
+								connections_manager.new_connection(conn_socket, conn_name);
+								button_status = true;
+								activate_connection.label = "Deactivate";
+							}
+							catch (Manager.ConnectorError e) {
+								Dialog error_dialog = new Dialog.with_buttons("Error", this, DialogFlags.MODAL);
+								error_dialog.vbox.add(new Label("ERROR WHILE ACTIVATING CONNECTION"));
+								error_dialog.vbox.add(new Label(e.message));
+								error_dialog.add_button("Close", 0);
+								error_dialog.vbox.show_all();
+								error_dialog.close.connect(
+									(ev) => {
+										error_dialog.destroy();
+									});
+								error_dialog.response.connect(
+									(ev, resp) => {
+										error_dialog.destroy();
+									});
+								Helper.debug(Helper.TAG_ERROR, e.message);
+								error_dialog.run();
+							}
 						}
 						else {
 							// Deactivate Connection
@@ -208,7 +227,7 @@ namespace VDEPN
 				});
 
 			help_item.submenu = help_menu;
-			
+
 			main_menu.append(file_item);
 			main_menu.append(help_item);
 		}
