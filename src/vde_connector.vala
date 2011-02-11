@@ -32,6 +32,18 @@ namespace VDEPN.Manager
 			active_connections = new List<VDEConnection>();
 		}
 
+		public bool new_connection_from_pid(VDEConfiguration conf) {
+			foreach (VDEConnection c in active_connections) {
+				if (c.conn_id == conf.connection_name) {
+					Helper.debug(Helper.TAG_ERROR, "Connection is still alive");
+					return false;
+				}
+			}
+
+			active_connections.append(new VDEConnection.from_pid_file(conf.connection_name));
+			return true;
+		}
+
 		public bool new_connection(VDEConfiguration conf) throws ConnectorError {
 			foreach (VDEConnection c in active_connections) {
 				if (c.conn_id == conf.connection_name) {
@@ -41,7 +53,11 @@ namespace VDEPN.Manager
 			}
 
 			try {
-				VDEConnection new_one = new VDEConnection.with_path(conf.socket_path, conf.connection_name);
+				VDEConnection new_one = new VDEConnection.with_path(conf.socket_path,
+																	conf.connection_name,
+																	conf.user,
+																	conf.machine,
+																	conf.ip_address);
 				Helper.debug(Helper.TAG_DEBUG, "Creating new connection");
 				active_connections.append(new_one);
 				return true;
@@ -54,14 +70,14 @@ namespace VDEPN.Manager
 		public bool rm_connection(string id) {
 			foreach (VDEConnection c in active_connections) {
 				if (c.conn_id == id) {
-					Helper.debug(Helper.TAG_DEBUG, "Removing Connection");
-					c.destroy_connection();
-					active_connections.remove(c);
-					return true;
+					if (c.destroy_connection()) {
+						active_connections.remove(c);
+						return true;
+					}
 				}
 			}
 
-			Helper.debug(Helper.TAG_ERROR, "Connection wasn't alive");
+			Helper.debug(Helper.TAG_ERROR, "Connection not found in active connections list");
 			return false;
 		}
 	}
@@ -72,32 +88,74 @@ namespace VDEPN.Manager
 		private string vde_switch_cmd;
 		private string vde_switch_path;
 		private string vde_plug_cmd;
+		private string pgrep_cmd;
+		private string pkexec_cmd;
 		private string dpipe_cmd;
+		private string ifconfig_cmd;
 		private string pidfile_path;
 		private string iface;
 		private string ip_addr;
 		private int vde_switch_pid;
 
-		public VDEConnection(string conn_id) throws ConnectorError {
-			try {
-				this.with_path("/tmp/unnamed", conn_id);
-			}
-			catch (ConnectorError e) {
-				throw e;
-			}
+		public VDEConnection.from_pid_file(string conn_id) {
+			string pidtmp;
+			this.conn_id = conn_id;
+			GLib.FileUtils.get_contents("/tmp/vdepn-" + conn_id + ".pid", out pidtmp);
+			vde_switch_pid = pidtmp.to_int();
+			Helper.debug(Helper.TAG_DEBUG, "Grabbed pid " + vde_switch_pid.to_string());
 		}
 
-		public VDEConnection.with_path(string path, string conn_id) throws ConnectorError {
+		public VDEConnection.with_path(string path, string conn_id,
+									   string user, string machine,
+									   string ipaddr) throws ConnectorError {
+			string script;
+			string temp_file;
+
+			GLib.FileUtils.open_tmp("vdepn-XXXXXX.sh", out temp_file);
+
+
+
 			get_paths();
+
 			if (
 				(vde_switch_cmd == null) ||
 				(vde_plug_cmd == null) ||
 				(dpipe_cmd == null))
 				throw new ConnectorError.COMMAND_NOT_FOUND("VDE not fully installed");
 
+			if (pkexec_cmd == null)
+				throw new ConnectorError.COMMAND_NOT_FOUND("pkexec not found, root unavailable");
+
+			if (pgrep_cmd == null)
+				throw new ConnectorError.COMMAND_NOT_FOUND("pgrep not found, can't kill the switches");
+
+			if (ifconfig_cmd == null)
+				throw new ConnectorError.COMMAND_NOT_FOUND("ifconfig not found, can't set up interface");
+
 			vde_switch_path = path;
 			this.conn_id = conn_id;
 			iface = "vdepn-" + conn_id;
+
+			script = "#!/bin/sh\n\n" +
+				vde_switch_cmd + " -d -t " + iface + " -s " + path + "\n" +
+				pgrep_cmd + " -n vde_switch > /tmp/vdepn-" + conn_id + ".pid\n" +
+				dpipe_cmd + " ssh -o StrictHostKeyChecking=no " + user + "@" + machine + " vde_plug " +
+				"= " + vde_plug_cmd + " " + path + " &\n" +
+				ifconfig_cmd + " " + iface + " " + ipaddr + " up\n";
+
+			GLib.FileUtils.set_contents(temp_file, script, -1);
+			GLib.FileUtils.chmod(temp_file, 0700);
+			Helper.debug(Helper.TAG_DEBUG, "Saved script in " + temp_file);
+			Helper.debug(Helper.TAG_DEBUG, "Launching script with pkexec");
+			string command = pkexec_cmd + " " + temp_file;
+			Process.spawn_command_line_sync(command, null, null, null);
+
+			GLib.FileUtils.unlink(temp_file);
+			Helper.debug(Helper.TAG_DEBUG, "Unlinked temp file");
+			string pidtmp;
+			GLib.FileUtils.get_contents("/tmp/vdepn-" + conn_id + ".pid", out pidtmp, null);
+			vde_switch_pid = pidtmp.to_int();
+			Helper.debug(Helper.TAG_DEBUG, "vde switch pid: " + vde_switch_pid.to_string());
 		}
 
 		private void get_paths() {
@@ -108,30 +166,58 @@ namespace VDEPN.Manager
 			try {
 				command = "whereis vde_switch";
 				Process.spawn_command_line_sync(command, out cmd_result, null, null);
-				tmp_split = cmd_result.split(": ", 0);
+				tmp_split = cmd_result.split(" ", 0);
 				vde_switch_cmd = tmp_split[1].chomp();
 
 				command = "whereis vde_plug";
 				Process.spawn_command_line_sync(command, out cmd_result, null, null);
-				tmp_split = cmd_result.split(": ", 0);
+				tmp_split = cmd_result.split(" ", 0);
 				vde_plug_cmd = tmp_split[1].chomp();
 
 				command = "whereis dpipe";
 				Process.spawn_command_line_sync(command, out cmd_result, null, null);
-				tmp_split = cmd_result.split(": ", 0);
+				tmp_split = cmd_result.split(" ", 0);
 				dpipe_cmd = tmp_split[1].chomp();
+
+				command = "whereis pkexec";
+				Process.spawn_command_line_sync(command, out cmd_result, null, null);
+				tmp_split = cmd_result.split(" ", 0);
+				pkexec_cmd = tmp_split[1].chomp();
+
+				command = "whereis pgrep";
+				Process.spawn_command_line_sync(command, out cmd_result, null, null);
+				tmp_split = cmd_result.split(" ", 0);
+				pgrep_cmd = tmp_split[1].chomp();
+
+				command = "whereis ifconfig";
+				Process.spawn_command_line_sync(command, out cmd_result, null, null);
+				tmp_split = cmd_result.split(" ", 0);
+				ifconfig_cmd = tmp_split[1].chomp();
 
 				Helper.debug(Helper.TAG_DEBUG, "vde_switch is at " + vde_switch_cmd);
 				Helper.debug(Helper.TAG_DEBUG, "vde_plug   is at " + vde_plug_cmd);
 				Helper.debug(Helper.TAG_DEBUG, "dpipe      is at " + dpipe_cmd);
+				Helper.debug(Helper.TAG_DEBUG, "pkexec     is at " + pkexec_cmd);
+				Helper.debug(Helper.TAG_DEBUG, "pgrep      is at " + pgrep_cmd);
+				Helper.debug(Helper.TAG_DEBUG, "ifconfig   is at " + ifconfig_cmd);
 			}
 			catch (GLib.SpawnError e) {
 				Helper.debug(Helper.TAG_ERROR, e.message);
 			}
 		}
 
-		public void destroy_connection() {
-			Helper.debug(Helper.TAG_DEBUG, "Will do it soon..");
+		public bool destroy_connection() {
+			string command;
+			Helper.debug(Helper.TAG_DEBUG,
+						 "Removing connection with pid: /tmp/vdepn-" +
+						 conn_id + ".pid");
+			get_paths();
+
+			command = pkexec_cmd + " kill -9 " + vde_switch_pid.to_string();
+
+			Process.spawn_command_line_sync(command, null, null, null);
+
+			return true;
 		}
 	}
 }

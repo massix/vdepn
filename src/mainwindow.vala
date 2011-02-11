@@ -331,8 +331,16 @@ namespace VDEPN
 
 		private Button get_button(VDEConfiguration c, out bool status)
 		{
-			status = false;
-			return new Button.with_label("Activate");
+			File pidfile = File.new_for_path("/tmp/vdepn-" + c.connection_name + ".pid");
+			if (pidfile.query_exists(null)) {
+				connections_manager.new_connection_from_pid(c);
+				status = true;
+				return new Button.with_label("Deactivate");
+			}
+			else {
+				status = false;
+				return new Button.with_label("Activate");
+			}
 		}
 	}
 }
