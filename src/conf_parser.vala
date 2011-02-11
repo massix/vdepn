@@ -41,7 +41,7 @@ namespace VDEPN
 		PRIVATE, PUBLIC
 	}
 
-	protected class VdeConfiguration : GLib.Object
+	protected class VDEConfiguration : GLib.Object
 	{
 		/* Read only properties */
 		public string	connection_name { get; private set; }
@@ -55,8 +55,20 @@ namespace VDEPN
 		public bool		use_keys { get; private set; }
 		public bool		root_required { get; private set; }
 
-		protected VdeConfiguration(Xml.Node *conf_root) throws VDEConfigurationError
-		{
+		public VDEConfiguration.with_defaults(string conf_name) {
+			connection_name = conf_name;
+			socket_path = "/tmp/change-me";
+			user = "change-me";
+			machine = "change-me";
+			password = "change-me";
+			iface = "change-me";
+			ip_address = "127.0.0.1";
+			use_dhcp = false;
+			use_keys = false;
+			root_required = false;
+		}
+
+		protected VDEConfiguration(Xml.Node *conf_root) throws VDEConfigurationError {
 			socket_path = null;
 			Xml.Attr* id;
 			/* parse node and create a configuration */
@@ -71,7 +83,7 @@ namespace VDEPN
 				throw new VDEConfigurationError.NULL_ID("Connection ID can't be omitted");
 
 			/* wether if requires root or not */
-			if ((conf_root->has_prop("root")->children->get_content() == "yes"))
+			if ((conf_root->has_prop("root")->children->get_content() == "true"))
 				root_required = true;
 
 			else
@@ -87,7 +99,7 @@ namespace VDEPN
 				case "ipaddress":
 					Xml.Attr *dhcp;
 					dhcp = conf_node->has_prop("dhcp");
-					if ((dhcp != null) && (dhcp->children->get_content() == "yes")) {
+					if ((dhcp != null) && (dhcp->children->get_content() == "true")) {
 						ip_address = null;
 						use_dhcp = true;
 					}
@@ -107,8 +119,8 @@ namespace VDEPN
 					Xml.Attr *usekeys;
 					required = conf_node->has_prop("required");
 					usekeys = conf_node->has_prop("usekeys");
-					if ((required != null) && (required->children->get_content() == "no")) {
-						if ((usekeys != null) && (usekeys->children->get_content() == "yes"))
+					if ((required != null) && (required->children->get_content() == "false")) {
+						if ((usekeys != null) && (usekeys->children->get_content() == "true"))
 							use_keys = true;
 
 						else
@@ -138,20 +150,69 @@ namespace VDEPN
 
 			Helper.debug(Helper.TAG_DEBUG, "Configuration for " + connection_name + " saved");
 		}
+
+		public void update_configuration(string new_sock, string new_machine, string new_user,
+										 string new_ip_address, bool new_root_required,
+										 bool new_ssh_keys) {
+			socket_path = new_sock;
+			machine = new_machine;
+			user = new_user;
+			ip_address = new_ip_address;
+			root_required = new_root_required;
+			use_keys = new_ssh_keys;
+		}
+
+		public Xml.Node* store_configuration(VDEParser? p) {
+			Xml.Node *root_node = new Xml.Node(null, "connection");
+			root_node->set_prop("id", connection_name);
+			root_node->set_prop("root", root_required.to_string());
+
+			Xml.Node *sock_path_node = new Xml.Node(null, "sockpath");
+			sock_path_node->set_content(socket_path);
+
+			Xml.Node *ipaddress_node = new Xml.Node(null, "ipaddress");
+			ipaddress_node->set_prop("dhcp", "false");
+			ipaddress_node->set_content(ip_address);
+
+			Xml.Node *user_node = new Xml.Node(null, "user");
+			user_node->set_content(user);
+
+			Xml.Node *machine_node = new Xml.Node(null, "machine");
+			machine_node->set_content(machine);
+
+			Xml.Node *password_node = new Xml.Node(null, "password");
+			password_node->set_prop("required", "false");
+			password_node->set_prop("usekeys", "false");
+
+			root_node->add_child(sock_path_node);
+			root_node->add_child(ipaddress_node);
+			root_node->add_child(user_node);
+			root_node->add_child(machine_node);
+			root_node->add_child(password_node);
+
+			if (p != null) {
+				p.update_file(root_node, this);
+				return null;
+			}
+			else
+				return root_node;
+
+			Helper.debug(Helper.TAG_DEBUG, "Storing configuration");
+		}
 	}
 
 
-	public class VdeParser : GLib.Object
+	public class VDEParser : GLib.Object
 	{
-		private List<VdeConfiguration> configurations;
+		private List<VDEConfiguration> configurations;
 		private Doc *configuration_file;
 
-		public VdeParser(string path) throws XMLError
+		public VDEParser(string path) throws XMLError
 		{
 			Xml.Node *root_node;
 			Xml.Node *connection_node;
 			List<Xml.Node*> connection_node_list = new List<Xml.Node*>();
-			configurations = new List<VdeConfiguration>();
+			configurations = new List<VDEConfiguration>();
 
 			/* init XML parser */
 			Parser.init();
@@ -168,15 +229,42 @@ namespace VDEPN
 			/* foreach <connection> node */
 			foreach (Xml.Node* n in connection_node_list) {
 				try {
-					configurations.append(new VdeConfiguration(n));
+					configurations.append(new VDEConfiguration(n));
 				}
 				catch (GLib.Error e) {
 					Helper.debug(Helper.TAG_ERROR, e.message);
 				}
 			}
 		}
+		public void update_file(Xml.Node *new_conn_root_node, VDEConfiguration v) {
+			Doc new_conf = new Doc();
+			int index = configurations.index(v);
+			string conf_id = new_conn_root_node->has_prop("id")->children->content;
+			Xml.Node *root_elem = new Xml.Node(null, "vdemanager");
 
-		public List<VdeConfiguration> get_configurations()
+			new_conf.set_root_element(root_elem);
+
+			root_elem->add_child(new_conn_root_node);
+			if (index < 0) {
+				Helper.debug(Helper.TAG_DEBUG, "Appending new configuration to configurations list");
+				configurations.append(v);
+			}
+			else
+				Helper.debug(Helper.TAG_DEBUG, "Configuration was already in the configurations list");
+
+			Helper.debug(Helper.TAG_DEBUG, "updating file");
+			foreach (VDEConfiguration v_conf in configurations) {
+				Xml.Node *conf_node = v_conf.store_configuration(null);
+				if (!(conf_node->has_prop("id")->children->content == conf_id))
+					root_elem->add_child(conf_node);
+			}
+
+			Helper.debug(Helper.TAG_DEBUG, "Creating new configuration");
+			Helper.debug(Helper.TAG_DEBUG, "Storing " + Environment.get_user_config_dir() + Helper.XML_FILE);
+			new_conf.save_file(Environment.get_user_config_dir() + Helper.XML_FILE);
+		}
+
+		public List<VDEConfiguration> get_configurations()
 		{
 			return configurations.copy();
 		}

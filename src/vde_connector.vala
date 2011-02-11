@@ -24,7 +24,7 @@ namespace VDEPN.Manager
 		CONNECTION_FAILED
 	}
 
-	public class VDEConnector
+	public class VDEConnector : GLib.Object
 	{
 		private List<VDEConnection> active_connections;
 
@@ -32,16 +32,16 @@ namespace VDEPN.Manager
 			active_connections = new List<VDEConnection>();
 		}
 
-		public bool new_connection(string socket_path, string id) throws ConnectorError {
+		public bool new_connection(VDEConfiguration conf) throws ConnectorError {
 			foreach (VDEConnection c in active_connections) {
-				if (c.conn_id == id) {
+				if (c.conn_id == conf.connection_name) {
 					Helper.debug(Helper.TAG_ERROR, "Connection is still alive");
 					return false;
 				}
 			}
 
 			try {
-				VDEConnection new_one = new VDEConnection.with_path(socket_path, id);
+				VDEConnection new_one = new VDEConnection.with_path(conf.socket_path, conf.connection_name);
 				Helper.debug(Helper.TAG_DEBUG, "Creating new connection");
 				active_connections.append(new_one);
 				return true;
@@ -66,7 +66,7 @@ namespace VDEPN.Manager
 		}
 	}
 
-	public class VDEConnection
+	public class VDEConnection : GLib.Object
 	{
 		public string conn_id { get; private set; }
 		private string vde_switch_cmd;

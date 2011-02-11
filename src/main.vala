@@ -41,19 +41,19 @@ namespace VDEPN
 			def_conf.set_root_element(root_elem);
 			root_elem->add_child(conn_root_elem);
 			conn_root_elem->set_prop("id", "test-connection");
-			conn_root_elem->set_prop("root", "yes");
+			conn_root_elem->set_prop("root", "true");
 			conn_root_elem->add_child(conn_sock_path);
 			conn_sock_path->set_content("/tmp/test-connection");
 			conn_root_elem->add_child(conn_ip_address);
-			conn_ip_address->set_prop("dhcp", "no");
+			conn_ip_address->set_prop("dhcp", "false");
 			conn_ip_address->set_content("10.0.0.1");
 			conn_root_elem->add_child(conn_user);
 			conn_user->set_content("vde0");
 			conn_root_elem->add_child(conn_machine);
 			conn_machine->set_content("vde2.v2.cs.unibo.it");
 			conn_root_elem->add_child(conn_password);
-			conn_password->set_prop("required", "no");
-			conn_password->set_prop("usekeys", "no");
+			conn_password->set_prop("required", "false");
+			conn_password->set_prop("usekeys", "false");
 
 			return def_conf;
 		}
@@ -61,8 +61,8 @@ namespace VDEPN
 
 		public static void main(string[] args)
 		{
-			File prog_dir = File.new_for_path(get_user_config_dir() + "/vdepn");
-			File prog_xml = File.new_for_path(get_user_config_dir() + "/vdepn/connections.xml");
+			File prog_dir = File.new_for_path(Environment.get_user_config_dir() + Helper.PROG_DATA_DIR);
+			File prog_xml = File.new_for_path(Environment.get_user_config_dir() + Helper.XML_FILE);
 
 			// Configuration dir exists..
 			if (prog_dir.query_exists(null)) {
@@ -74,16 +74,16 @@ namespace VDEPN
 				else {
 					Helper.debug(Helper.TAG_DEBUG, "Creating new default connections file");
 					Doc conf = default_configuration();
-					conf.save_file(get_user_config_dir() + "/vdepn/connections.xml");
+					conf.save_file(get_user_config_dir() + Helper.XML_FILE);
 				}
 			}
 
 			// Configuration dir doesn't exist
 			else {
 				Helper.debug(Helper.TAG_DEBUG, "Creating new directory with default configuration file");
-				DirUtils.create(get_user_config_dir() + "/vdepn", 0775);
+				DirUtils.create(get_user_config_dir() + Helper.PROG_DATA_DIR, 0775);
 				Doc conf = default_configuration();
-				conf.save_file(get_user_config_dir() + "/vdepn/connections.xml");
+				conf.save_file(get_user_config_dir() + Helper.XML_FILE);
 			}
 
 			Gtk.init(ref args);

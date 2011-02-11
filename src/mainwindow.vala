@@ -26,8 +26,8 @@ namespace VDEPN
 	{
 		private VBox main_vbox;
 		private Notebook conf_pages;
-		private VdeParser conf_holder;
-		private List<VdeConfiguration> conf_list;
+		private VDEParser conf_holder;
+		private List<VDEConfiguration> conf_list;
 		private MenuBar main_menu;
 		private string prg_files = get_user_config_dir() + "/vdepn";
 		private Manager.VDEConnector connections_manager;
@@ -46,8 +46,9 @@ namespace VDEPN
 
 			main_vbox = new VBox(false, 2);
 			conf_pages = new Notebook();
+			conf_pages.scrollable = true;
 			title = caption;
-			resize(200,200);
+			resize(500,200);
 			this.delete_event.connect(
 				(a) => {
 					Gtk.main_quit();
@@ -55,7 +56,7 @@ namespace VDEPN
 				});
 
 			try {
-				conf_holder = new VdeParser(prg_files + "/connections.xml");
+				conf_holder = new VDEParser(prg_files + "/connections.xml");
 			}
 			catch (Error e)
 			{
@@ -63,119 +64,145 @@ namespace VDEPN
 			}
 
 			conf_list = conf_holder.get_configurations();
-
-			foreach (VdeConfiguration v in conf_list) {
-				// build a notebook page for each configuration
-				bool button_status = false;
-				Table conf_table = new Table(8, 2, true);
-				string conn_name = v.connection_name;
-				string conn_machine = v.machine;
-				string conn_user = v.user;
-				string conn_socket = v.socket_path;
-				string conn_ipaddr = v.ip_address;
-
-				Label conn_name_label = new Label("Connection name: ");
-				Entry conn_name_entry = new Entry();
-
-				Label machine_label = new Label("VDE Machine: ");
-				Entry machine_entry = new Entry();
-
-				Label user_label = new Label("VDE User: ");
-				Entry user_entry = new Entry();
-
-				Label socket_label = new Label("Socket path: ");
-				Entry socket_entry = new Entry();
-
-				Label ipaddr_label = new Label("TUN Interface IPv4: ");
-				Entry ipaddr_entry = new Entry();
-
-				CheckButton button_ssh = new CheckButton.with_label("Use SSH keys");
-				CheckButton button_root = new CheckButton.with_label("Needs root");
-
-				button_ssh.active = v.use_keys;
-				button_root.active = v.root_required;
-
-				Button activate_connection = get_button(v, out button_status);
-
-				activate_connection.clicked.connect(
-					(ev) => {
-						if (button_status == false) {
-							// Activate Connection
-							try {
-								Helper.debug(Helper.TAG_DEBUG, "Activated Connection " + conn_name);
-								connections_manager.new_connection(conn_socket, conn_name);
-								button_status = true;
-								activate_connection.label = "Deactivate";
-							}
-							catch (Manager.ConnectorError e) {
-								Dialog error_dialog = new Dialog.with_buttons("Error", this, DialogFlags.MODAL);
-								error_dialog.vbox.add(new Label("ERROR WHILE ACTIVATING CONNECTION"));
-								error_dialog.vbox.add(new Label(e.message));
-								error_dialog.add_button("Close", 0);
-								error_dialog.vbox.show_all();
-								error_dialog.close.connect(
-									(ev) => {
-										error_dialog.destroy();
-									});
-								error_dialog.response.connect(
-									(ev, resp) => {
-										error_dialog.destroy();
-									});
-								Helper.debug(Helper.TAG_ERROR, e.message);
-								error_dialog.run();
-							}
-						}
-						else {
-							// Deactivate Connection
-							activate_connection.label = "Activate";
-							Helper.debug(Helper.TAG_DEBUG, "Deactivated Connection " + conn_name);
-							connections_manager.rm_connection(conn_name);
-							button_status = false;
-						}
-					});
-
-				machine_entry.editable = false;
-				machine_entry.text = conn_machine;
-
-				conn_name_entry.editable = false;
-				conn_name_entry.text = conn_name;
-
-				user_entry.editable = false;
-				user_entry.text = conn_user;
-
-				socket_entry.editable = false;
-				socket_entry.text = conn_socket;
-
-				ipaddr_entry.editable = false;
-				ipaddr_entry.text = conn_ipaddr;
-
-				conf_table.attach_defaults(conn_name_label, 0, 1, 0, 1);
-				conf_table.attach_defaults(conn_name_entry, 1, 2, 0, 1);
-
-				conf_table.attach_defaults(machine_label, 0, 1, 1, 2);
-				conf_table.attach_defaults(machine_entry, 1, 2, 1, 2);
-
-				conf_table.attach_defaults(user_label, 0, 1, 2, 3);
-				conf_table.attach_defaults(user_entry, 1, 2, 2, 3);
-
-				conf_table.attach_defaults(socket_label, 0, 1, 3, 4);
-				conf_table.attach_defaults(socket_entry, 1, 2, 3, 4);
-
-				conf_table.attach_defaults(ipaddr_label, 0, 1, 4, 5);
-				conf_table.attach_defaults(ipaddr_entry, 1, 2, 4, 5);
-
-				conf_table.attach_defaults(button_ssh, 0, 1, 5, 6);
-				conf_table.attach_defaults(button_root, 1, 2, 5, 6);
-
-				conf_table.attach_defaults(activate_connection, 0, 2, 7, 8);
-
-				conf_pages.append_page(conf_table, new Label(conn_name));
-			}
-
-			main_vbox.pack_start(main_menu, true, true, 0);
+			build_notebook();
+			main_vbox.pack_start(main_menu, false, true, 0);
 			main_vbox.pack_end(conf_pages, true, true, 0);
 			add(main_vbox);
 			show_all();
+		}
+
+		private void add_notebook_page(VDEConfiguration v) {
+			// build a notebook page for each configuration
+			int index = conf_list.index(v);
+			bool button_status = false;
+			Table conf_table = new Table(8, 2, true);
+			string conn_name = v.connection_name;
+			string conn_machine = v.machine;
+			string conn_user = v.user;
+			string conn_socket = v.socket_path;
+			string conn_ipaddr = v.ip_address;
+
+			Label conn_name_label = new Label("Connection name: ");
+			Entry conn_name_entry = new Entry();
+
+			Label machine_label = new Label("VDE Machine: ");
+			Entry machine_entry = new Entry();
+
+			Label user_label = new Label("VDE User: ");
+			Entry user_entry = new Entry();
+
+			Label socket_label = new Label("Socket path: ");
+			Entry socket_entry = new Entry();
+
+			Label ipaddr_label = new Label("TUN Interface IPv4: ");
+			Entry ipaddr_entry = new Entry();
+
+			CheckButton button_ssh = new CheckButton.with_label("Use SSH keys");
+			CheckButton button_root = new CheckButton.with_label("Needs root");
+
+			button_ssh.active = v.use_keys;
+			button_root.active = v.root_required;
+
+			Button activate_connection = get_button(v, out button_status);
+			Button save_configuration = new Button.with_label("Save");
+
+			machine_entry.editable = true;
+			machine_entry.set_text(conn_machine);
+
+			conn_name_entry.editable = false;
+			conn_name_entry.set_text(conn_name);
+
+			user_entry.editable = true;
+			user_entry.set_text(conn_user);
+
+			socket_entry.editable = true;
+			socket_entry.set_text(conn_socket);
+
+			ipaddr_entry.editable = true;
+			ipaddr_entry.set_text(conn_ipaddr);
+			conf_table.attach_defaults(conn_name_label, 0, 1, 0, 1);
+			conf_table.attach_defaults(conn_name_entry, 1, 2, 0, 1);
+
+			conf_table.attach_defaults(machine_label, 0, 1, 1, 2);
+			conf_table.attach_defaults(machine_entry, 1, 2, 1, 2);
+
+			conf_table.attach_defaults(user_label, 0, 1, 2, 3);
+			conf_table.attach_defaults(user_entry, 1, 2, 2, 3);
+
+			conf_table.attach_defaults(socket_label, 0, 1, 3, 4);
+			conf_table.attach_defaults(socket_entry, 1, 2, 3, 4);
+
+			conf_table.attach_defaults(ipaddr_label, 0, 1, 4, 5);
+			conf_table.attach_defaults(ipaddr_entry, 1, 2, 4, 5);
+
+			conf_table.attach_defaults(button_ssh, 0, 1, 5, 6);
+			conf_table.attach_defaults(button_root, 1, 2, 5, 6);
+
+			conf_table.attach_defaults(save_configuration, 0, 1, 7, 8);
+			conf_table.attach_defaults(activate_connection, 1, 2, 7, 8);
+
+			conf_pages.append_page(conf_table, new Label(conn_name));
+
+			save_configuration.clicked.connect(
+				(ev) => {
+					VDEConfiguration tmp = conf_list.nth_data(index);
+					tmp.update_configuration(socket_entry.text, machine_entry.text,
+											 user_entry.text, ipaddr_entry.text,
+											 button_root.active, button_ssh.active);
+					tmp.store_configuration(conf_holder);
+				});
+
+			activate_connection.clicked.connect(
+				(ev) => {
+					if (button_status == false) {
+						// Activate Connection
+						try {
+							VDEConfiguration tmp = conf_list.nth_data(index);
+							Helper.debug(Helper.TAG_DEBUG, "Activated Connection " +
+										 tmp.connection_name);
+							tmp.update_configuration(socket_entry.get_text(), machine_entry.get_text(),
+													 user_entry.get_text(), ipaddr_entry.get_text(),
+													 button_root.active, button_ssh.active);
+							connections_manager.new_connection(tmp);
+							button_status = true;
+							activate_connection.label = "Deactivate";
+						}
+						catch (Manager.ConnectorError e) {
+							Dialog error_dialog = new Dialog.with_buttons("Error", this, DialogFlags.MODAL);
+							error_dialog.vbox.add(new Label("ERROR WHILE ACTIVATING CONNECTION"));
+							error_dialog.vbox.add(new Label(e.message));
+							error_dialog.add_button("Close", 0);
+							error_dialog.vbox.show_all();
+							error_dialog.close.connect(
+								(ev) => {
+									error_dialog.destroy();
+								});
+							error_dialog.response.connect(
+								(ev, resp) => {
+									error_dialog.destroy();
+								});
+							Helper.debug(Helper.TAG_ERROR, e.message);
+							error_dialog.run();
+						}
+					}
+					else {
+						// Deactivate Connection
+						activate_connection.label = "Activate";
+						Helper.debug(Helper.TAG_DEBUG, "Deactivated Connection " + conn_name);
+						connections_manager.rm_connection(conn_name);
+						button_status = false;
+					}
+				});
+			conf_pages.show_all();
+		}
+
+		private void build_notebook() {
+			Helper.debug(Helper.TAG_DEBUG, "Creating " + conf_list.length().to_string() + " pages");
+			foreach (VDEConfiguration v in conf_list)
+				add_notebook_page(v);
+
+			conf_pages.show_all();
+			main_vbox.pack_end(conf_pages, true, true, 0);
 		}
 
 		private void build_menubar()
@@ -186,13 +213,54 @@ namespace VDEPN
 			Menu file_menu = new Menu();
 			MenuItem file_item = new MenuItem.with_label("File");
 			MenuItem new_conn_item = new MenuItem.with_label("New connection");
+			MenuItem rm_conn_item = new MenuItem.with_label("Remove connection");
 			MenuItem exit_item = new MenuItem.with_label("Exit");
 			file_menu.append(new_conn_item);
+			file_menu.append(rm_conn_item);
+			file_menu.append(new SeparatorMenuItem());
 			file_menu.append(exit_item);
+
+			rm_conn_item.activate.connect(
+				(ev) => {
+					int conn_id = conf_pages.get_current_page();
+					if (conn_id < 0) {
+						Helper.debug(Helper.TAG_ERROR, "No active page");
+						return;
+					}
+					else {
+						VDEConfiguration rem = conf_list.nth_data(conn_id);
+						Helper.debug(Helper.TAG_DEBUG, "Remove connection " + rem.connection_name);
+					}
+				});
+
 
 			new_conn_item.activate.connect(
 				(ev) => {
-					Helper.debug(Helper.TAG_DEBUG, "New connection");
+					Dialog new_conf_dialog = new Dialog.with_buttons("New Configuration", this, DialogFlags.MODAL);
+					Entry new_conf_entry = new Entry();
+					new_conf_entry.text = "change";
+					new_conf_dialog.vbox.add(new Label("New configuration ID"));
+					new_conf_dialog.vbox.add(new_conf_entry);
+					new_conf_dialog.add_button("Create", 0);
+					new_conf_dialog.add_button("Abort", 1);
+					new_conf_dialog.vbox.show_all();
+					new_conf_dialog.close.connect(
+						(ev) => {
+							new_conf_dialog.destroy();
+						});
+					new_conf_dialog.response.connect(
+						(ev, resp) => {
+							if (resp == 0) {
+								VDEConfiguration new_conf = new VDEConfiguration.with_defaults(new_conf_entry.text);
+								Helper.debug(Helper.TAG_DEBUG, "New connection");
+								conf_list.append(new_conf);
+								add_notebook_page(new_conf);
+								new_conf_dialog.destroy();
+							}
+							else
+								new_conf_dialog.destroy();
+						});
+					new_conf_dialog.run();
 				});
 
 			exit_item.activate.connect(
@@ -242,7 +310,7 @@ namespace VDEPN
 			main_menu.append(help_item);
 		}
 
-		private Button get_button(VdeConfiguration c, out bool status)
+		private Button get_button(VDEConfiguration c, out bool status)
 		{
 			status = false;
 			return new Button.with_label("Activate");

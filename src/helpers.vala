@@ -17,13 +17,16 @@
  *
  */
 
+using GLib.Environment;
+
 namespace VDEPN {
-	public class Helper : GLib.Object
-	{
+	public class Helper : GLib.Object {
 		public const string TAG_DEBUG = "DEBUG";
 		public const string TAG_ERROR = "ERROR";
 		public const string TAG_WARNING = "WARNING";
-		
+		public const string PROG_DATA_DIR = "/vdepn";
+		public const string XML_FILE = PROG_DATA_DIR + "/connections.xml";
+
 		public static void debug(string tag, string message)
 		{
 			stdout.printf("[%s] %s\n", tag, message);
