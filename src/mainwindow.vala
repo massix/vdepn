@@ -92,23 +92,23 @@ namespace VDEPN
 			string conn_socket = v.socket_path;
 			string conn_ipaddr = v.ip_address;
 
-			Label conn_name_label = new Label("<b>Connection</b> name: ");
+			Label conn_name_label = new Label("<b>Connection</b> name:");
 			Entry conn_name_entry = new Entry();
 			conn_name_label.use_markup = true;
 
-			Label machine_label = new Label("VDE <b>Machine</b>: ");
+			Label machine_label = new Label("VDE <b>Machine</b>:");
 			Entry machine_entry = new Entry();
 			machine_label.use_markup = true;
 
-			Label user_label = new Label("VDE <b>User</b>: ");
+			Label user_label = new Label("VDE <b>User</b>:");
 			Entry user_entry = new Entry();
 			user_label.use_markup = true;
 
-			Label socket_label = new Label("<b>Socket</b> path: ");
+			Label socket_label = new Label("<b>Socket</b> path:");
 			Entry socket_entry = new Entry();
 			socket_label.use_markup = true;
 
-			Label ipaddr_label = new Label("TUN Interface <b>IPv4</b>: ");
+			Label ipaddr_label = new Label("TUN Interface <b>IPv4</b>:");
 			Entry ipaddr_entry = new Entry();
 			ipaddr_label.use_markup = true;
 
@@ -135,6 +135,7 @@ namespace VDEPN
 
 			ipaddr_entry.editable = true;
 			ipaddr_entry.set_text(conn_ipaddr);
+
 			conf_table.attach_defaults(conn_name_label, 0, 1, 0, 1);
 			conf_table.attach_defaults(conn_name_entry, 1, 2, 0, 1);
 
@@ -155,6 +156,12 @@ namespace VDEPN
 
 			conf_table.attach_defaults(save_configuration, 0, 1, 7, 8);
 			conf_table.attach_defaults(activate_connection, 1, 2, 7, 8);
+
+			ipaddr_label.xalign = (float) 0;
+			socket_label.xalign = (float) 0;
+			user_label.xalign = (float) 0;
+			machine_label.xalign = (float) 0;
+			conn_name_label.xalign = (float) 0;
 
 			conf_pages.append_page(conf_table, new Label(conn_name));
 
