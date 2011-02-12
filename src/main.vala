@@ -22,7 +22,7 @@ using Xml;
 
 namespace VDEPN
 {
-	public class Application
+	public class Application : GLib.Object
 	{
 		private static Doc default_configuration() {
 			Doc def_conf = new Doc();
@@ -90,9 +90,8 @@ namespace VDEPN
 			Helper.debug(Helper.TAG_DEBUG, get_user_config_dir());
 			set_application_name("VDE PN Manager");
 			set_prgname("VDE PN Manager");
-			string title = get_user_name() + "@" + get_host_name();
 			Notify.init("VDE PN Manager");
-			ConfigurationsList mainWindow = new ConfigurationsList(title + " VDE PN Manager");
+			ConfigurationsList mainWindow = new ConfigurationsList("VDE PN Manager");
 			TrayIcon tray = new TrayIcon(mainWindow);
 			tray.show();
 			Gtk.main();
