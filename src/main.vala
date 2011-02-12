@@ -91,8 +91,10 @@ namespace VDEPN
 			set_application_name("VDE PN Manager");
 			set_prgname("VDE PN Manager");
 			string title = get_user_name() + "@" + get_host_name();
+			Notify.init("VDE PN Manager");
 			ConfigurationsList mainWindow = new ConfigurationsList(title + " VDE PN Manager");
 			Gtk.main();
+			Notify.uninit();
 		}
 	}
 }

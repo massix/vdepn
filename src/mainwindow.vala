@@ -18,6 +18,7 @@
  */
 
 using Gtk;
+using Notify;
 using GLib.Environment;
 
 namespace VDEPN
@@ -31,6 +32,8 @@ namespace VDEPN
 		private MenuBar main_menu;
 		private string prg_files = get_user_config_dir() + "/vdepn";
 		private Manager.VDEConnector connections_manager;
+		private Notification conn_notify_active;
+		private Notification conn_notify_deactivated;
 
 		public ConfigurationsList(string caption)
 		{
@@ -46,6 +49,12 @@ namespace VDEPN
 
 			main_vbox = new VBox(false, 2);
 			conf_pages = new Notebook();
+			conn_notify_active = new Notification(Config.PACKAGE_NAME,
+												  Helper.NOTIFY_ACTIVE,
+												  Helper.ICON_PATH);
+			conn_notify_deactivated = new Notification(Config.PACKAGE_NAME,
+													   Helper.NOTIFY_DEACTIVE,
+													   Helper.ICON_PATH);
 			conf_pages.scrollable = true;
 			title = caption;
 			resize(500,200);
@@ -158,12 +167,21 @@ namespace VDEPN
 						// Activate Connection
 						try {
 							VDEConfiguration tmp = conf_list.nth_data(index);
-							Helper.debug(Helper.TAG_DEBUG, "Activated Connection " +
-										 tmp.connection_name);
 							tmp.update_configuration(socket_entry.get_text(), machine_entry.get_text(),
 													 user_entry.get_text(), ipaddr_entry.get_text(),
 													 button_root.active, button_ssh.active);
+
 							connections_manager.new_connection(tmp);
+							try {
+								conn_notify_active.update(Config.PACKAGE_NAME, Helper.NOTIFY_ACTIVE +
+														  " (" + tmp.connection_name + ")",
+														  Helper.ICON_PATH);
+								conn_notify_active.show();
+							}
+							catch (Error e) {
+								Helper.debug(Helper.TAG_ERROR, "Error while showing notification");
+							}
+
 							button_status = true;
 							activate_connection.label = "Deactivate";
 						}
@@ -190,6 +208,14 @@ namespace VDEPN
 						activate_connection.label = "Activate";
 						Helper.debug(Helper.TAG_DEBUG, "Deactivated Connection " + conn_name);
 						connections_manager.rm_connection(conn_name);
+						try {
+							conn_notify_deactivated.update(Config.PACKAGE_NAME, Helper.NOTIFY_DEACTIVE +
+														   " (" + conn_name + ")",
+														   Helper.ICON_PATH);
+							conn_notify_deactivated.show();
+						} catch (Error e) {
+							Helper.debug(Helper.TAG_ERROR, "Error while showing notification");
+						}
 						button_status = false;
 					}
 				});

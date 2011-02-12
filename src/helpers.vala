@@ -25,6 +25,10 @@ namespace VDEPN {
 		public const string TAG_ERROR = "ERROR";
 		public const string TAG_WARNING = "WARNING";
 		public const string PROG_DATA_DIR = "/vdepn";
+		public const string NOTIFY_ACTIVE = "Connection activated";
+		public const string NOTIFY_DEACTIVE = "Connection deactivated";
+		public const string ICON_PATH = Config.PKGDATADIR + "/share/v2.png";
+
 		public const string XML_FILE = PROG_DATA_DIR + "/connections.xml";
 
 		public static void debug(string tag, string message)
