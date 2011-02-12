@@ -93,6 +93,8 @@ namespace VDEPN
 			string title = get_user_name() + "@" + get_host_name();
 			Notify.init("VDE PN Manager");
 			ConfigurationsList mainWindow = new ConfigurationsList(title + " VDE PN Manager");
+			TrayIcon tray = new TrayIcon(mainWindow);
+			tray.show();
 			Gtk.main();
 			Notify.uninit();
 		}

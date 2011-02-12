@@ -31,7 +31,7 @@ namespace VDEPN
 		private List<VDEConfiguration> conf_list;
 		private MenuBar main_menu;
 		private string prg_files = get_user_config_dir() + "/vdepn";
-		private Manager.VDEConnector connections_manager;
+		public Manager.VDEConnector connections_manager { get; private set; }
 		private Notification conn_notify_active;
 		private Notification conn_notify_deactivated;
 
@@ -57,10 +57,11 @@ namespace VDEPN
 													   Helper.ICON_PATH);
 			conf_pages.scrollable = true;
 			title = caption;
-			resize(500,200);
+			resize(200,200);
+			resizable = false;
 			this.delete_event.connect(
-				(a) => {
-					Gtk.main_quit();
+				(ev) => {
+					visible = false;;
 					return true;
 				});
 
@@ -91,20 +92,25 @@ namespace VDEPN
 			string conn_socket = v.socket_path;
 			string conn_ipaddr = v.ip_address;
 
-			Label conn_name_label = new Label("Connection name: ");
+			Label conn_name_label = new Label("<b>Connection</b> name: ");
 			Entry conn_name_entry = new Entry();
+			conn_name_label.use_markup = true;
 
-			Label machine_label = new Label("VDE Machine: ");
+			Label machine_label = new Label("VDE <b>Machine</b>: ");
 			Entry machine_entry = new Entry();
+			machine_label.use_markup = true;
 
-			Label user_label = new Label("VDE User: ");
+			Label user_label = new Label("VDE <b>User</b>: ");
 			Entry user_entry = new Entry();
+			user_label.use_markup = true;
 
-			Label socket_label = new Label("Socket path: ");
+			Label socket_label = new Label("<b>Socket</b> path: ");
 			Entry socket_entry = new Entry();
+			socket_label.use_markup = true;
 
-			Label ipaddr_label = new Label("TUN Interface IPv4: ");
+			Label ipaddr_label = new Label("TUN Interface <b>IPv4</b>: ");
 			Entry ipaddr_entry = new Entry();
+			ipaddr_label.use_markup = true;
 
 			CheckButton button_ssh = new CheckButton.with_label("Use SSH keys");
 			CheckButton button_root = new CheckButton.with_label("Needs root");
@@ -367,6 +373,33 @@ namespace VDEPN
 				status = false;
 				return new Button.with_label("Activate");
 			}
+		}
+	}
+
+
+	// creates a new icon in the system tray, linked to the parent
+	public class TrayIcon : Gtk.StatusIcon {
+		private ConfigurationsList parent;
+		private Manager.VDEConnector parent_connector;
+
+		public TrayIcon(ConfigurationsList linked) {
+			set_from_file(Helper.ICON_PATH);
+			title = "VDE PN Manager";
+			set_tooltip_text("VDE PN Manager");
+			parent = linked;
+			parent_connector = parent.connections_manager;
+			activate.connect(
+				() => {
+					parent.visible = !parent.visible;
+				});
+		}
+
+		public void show() {
+			visible = true;
+		}
+
+		public void hide() {
+			visible = false;
 		}
 	}
 }
