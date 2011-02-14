@@ -36,7 +36,6 @@ namespace VDEPN
 			Xml.Node *conn_machine = def_conf.new_node(null, "machine");
 			Xml.Node *conn_password = def_conf.new_node(null, "password");
 
-
 			// Creates the DOM
 			def_conf.set_root_element(root_elem);
 			root_elem->add_child(conn_root_elem);
@@ -87,7 +86,12 @@ namespace VDEPN
 			}
 
 			Gtk.init(ref args);
-			Helper.debug(Helper.TAG_DEBUG, get_user_config_dir());
+			/* get a new authority from polkit */
+			if (Polkit.Wrapper.init_wrapper())
+				Helper.debug(Helper.TAG_DEBUG, "PolKit Subject PID: " + Polkit.Wrapper.get_pid_from_subject().to_string());
+			else
+				Helper.debug(Helper.TAG_ERROR, "PolKit didn't give me a new authority :-(");
+
 			set_application_name("VDE PN Manager");
 			set_prgname("VDE PN Manager");
 			Notify.init("VDE PN Manager");

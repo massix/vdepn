@@ -3,6 +3,7 @@ AM_CPPFLAGS = \
 			$(GLIB_CFLAGS) \
 			$(GTK_CFLAGS) \
 			$(LIBNOTIFY_CFLAGS) \
+			$(POLKIT_CFLAGS) \
 			$(LIBXML_CFLAGS)
 
 AM_VALAFLAGS = \
@@ -15,6 +16,8 @@ AM_VALAFLAGS = \
 bin_PROGRAMS = vde_manager
 
 vde_manager_SOURCES = \
+			polkit.c \
+			polkit_wrapper.vala \
 			mainwindow.vala \
 			conf_parser.vala \
 			helpers.vala \
@@ -25,4 +28,5 @@ vde_manager_LDFLAGS = \
 			$(GLIB_LIBS) \
 			$(GTK_LIBS) \
 			$(LIBNOTIFY_LIBS) \
+			$(POLKIT_LIBS) \
 			$(LIBXML_LIBS)
