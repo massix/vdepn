@@ -85,7 +85,10 @@ namespace VDEPN
 			// build a notebook page for each configuration
 			int index = conf_list.index(v);
 			bool button_status = false;
-			Table conf_table = new Table(8, 2, true);
+			Table conf_table = new Table(9, 2, true);
+			HButtonBox buttons_container = new HButtonBox();
+			Frame polkit_frame = Polkit.Wrapper.get_new_frame("Activate Connection");
+
 			string conn_name = v.connection_name;
 			string conn_machine = v.machine;
 			string conn_user = v.user;
@@ -154,8 +157,15 @@ namespace VDEPN
 			conf_table.attach_defaults(button_ssh, 0, 1, 5, 6);
 			conf_table.attach_defaults(button_root, 1, 2, 5, 6);
 
-			conf_table.attach_defaults(save_configuration, 0, 1, 7, 8);
-			conf_table.attach_defaults(activate_connection, 1, 2, 7, 8);
+			buttons_container.add(save_configuration);
+			buttons_container.add(activate_connection);
+
+			conf_table.attach_defaults(polkit_frame, 0, 2, 6, 8);
+
+			conf_table.attach_defaults(buttons_container, 0, 2, 8, 9);
+
+			//conf_table.attach_defaults(save_configuration, 0, 1, 7, 8);
+			//conf_table.attach_defaults(activate_connection, 1, 2, 7, 8);
 
 			ipaddr_label.xalign = (float) 0;
 			socket_label.xalign = (float) 0;
@@ -232,6 +242,7 @@ namespace VDEPN
 						button_status = false;
 					}
 				});
+
 			conf_pages.show_all();
 		}
 

@@ -23,6 +23,7 @@
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 #include <polkit/polkit.h>
+#include <polkitgtk/polkitgtk.h>
 #include <config.h>
 
 static PolkitAuthority *vdepn_authority;
@@ -31,7 +32,6 @@ static gint vdepn_application_pid;
 
 /* we'll be using the default pkexec */
 static const gchar* action = "org.freedesktop.policykit.exec";
-//static const gchar* action = "org.fedoraproject.config.services.manage";
 
 static void vdepn_polkit_wrapper_exec_command();
 
@@ -71,6 +71,34 @@ static gboolean vdepn_polkit_wrapper_init_subject()
   GError **errno;
   vdepn_subject = polkit_unix_process_new(vdepn_application_pid);
   return !(vdepn_subject == NULL);
+}
+
+GtkFrame *vdepn_polkit_wrapper_get_new_frame(const gchar *label)
+{
+  struct {
+	GtkFrame *container;
+	GtkVBox *vbox;
+	GtkLabel *label;
+	PolkitLockButton *pk_lock;
+  } _my_frame;
+
+  _my_frame.container = gtk_frame_new(label);
+  _my_frame.pk_lock = polkit_lock_button_new(action);
+  _my_frame.vbox = gtk_vbox_new(1, FALSE);
+  _my_frame.label = gtk_label_new("Click down here to <b>unlock</b> buttons");
+  _my_frame.label->use_markup = TRUE;
+
+  gtk_container_add((GtkContainer *) _my_frame.vbox, (GtkWidget *) _my_frame.label);
+  gtk_container_add((GtkContainer *) _my_frame.vbox, (GtkWidget *) _my_frame.pk_lock);
+
+  gtk_container_add((GtkContainer *) _my_frame.container, (GtkWidget *) _my_frame.vbox);
+
+  gtk_widget_show_all((GtkWidget *) _my_frame.container);
+
+  // the inner objects are already referenced
+  g_object_ref_sink(_my_frame.container);
+
+  return ((GtkFrame *) _my_frame.container);
 }
 
 gint vdepn_polkit_wrapper_get_pid_from_subject()

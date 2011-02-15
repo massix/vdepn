@@ -23,5 +23,6 @@ namespace VDEPN.Polkit {
 		public static extern bool init_wrapper();
 		public static extern int get_pid_from_subject();
 		public static extern bool get_authorization(string action);
+		public static extern Gtk.Frame get_new_frame(string label);
 	}
 }
