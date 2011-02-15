@@ -24,14 +24,18 @@
 #include <gtk/gtk.h>
 #include <polkit/polkit.h>
 #include <polkitgtk/polkitgtk.h>
+#include <dbus/dbus.h>
+#include <dbus/dbus-glib.h>
 #include <config.h>
 
 static PolkitAuthority *vdepn_authority;
 static PolkitSubject *vdepn_subject;
 static gint vdepn_application_pid;
+static DBusGConnection *vdepn_dbus_interface;
+static DBusGProxy *vdepn_dbus_proxy;
 
 /* we'll be using the default pkexec */
-static const gchar* action = "org.freedesktop.policykit.exec";
+static const gchar* action = "org.freedesktop.accounts.user-administration";
 
 static void vdepn_polkit_wrapper_exec_command();
 
@@ -77,21 +81,13 @@ GtkFrame *vdepn_polkit_wrapper_get_new_frame(const gchar *label)
 {
   struct {
 	GtkFrame *container;
-	GtkVBox *vbox;
-	GtkLabel *label;
 	PolkitLockButton *pk_lock;
   } _my_frame;
 
   _my_frame.container = gtk_frame_new(label);
   _my_frame.pk_lock = polkit_lock_button_new(action);
-  _my_frame.vbox = gtk_vbox_new(1, FALSE);
-  _my_frame.label = gtk_label_new("Click down here to <b>unlock</b> buttons");
-  _my_frame.label->use_markup = TRUE;
 
-  gtk_container_add((GtkContainer *) _my_frame.vbox, (GtkWidget *) _my_frame.label);
-  gtk_container_add((GtkContainer *) _my_frame.vbox, (GtkWidget *) _my_frame.pk_lock);
-
-  gtk_container_add((GtkContainer *) _my_frame.container, (GtkWidget *) _my_frame.vbox);
+  gtk_container_add((GtkContainer *) _my_frame.container, (GtkWidget *) _my_frame.pk_lock);
 
   gtk_widget_show_all((GtkWidget *) _my_frame.container);
 
@@ -111,6 +107,41 @@ gint vdepn_polkit_wrapper_get_pid_from_subject()
 
 gboolean vdepn_polkit_wrapper_init_wrapper()
 {
+  GError *dbus_error = NULL;
+
+  struct {
+	gchar *action_id;
+	gchar *description;
+	gchar *message;
+	gchar *vendor_name;
+	gchar *vendor_url;
+	gchar *icon_name;
+	int any;
+	int inactive;
+	int active;
+	GHashTable *htable;
+  } _receive;
+
+
+  vdepn_dbus_interface = dbus_g_bus_get(DBUS_BUS_SYSTEM, &dbus_error);
+  if (dbus_error != NULL) {
+	g_print("[DBUS_ERROR] %s\n", dbus_error->message);
+	return FALSE;
+  }
+
+  vdepn_dbus_proxy = dbus_g_proxy_new_for_name(vdepn_dbus_interface,
+											   "org.freedesktop.PolicyKit1",
+											   "/org/freedesktop/PolicyKit1/Authority",
+											   "org.freedesktop.PolicyKit1.Authority");
+
+  dbus_g_proxy_call(vdepn_dbus_proxy, (const gchar *) "EnumerateActions", &dbus_error,
+					G_TYPE_STRING, "it", G_TYPE_INVALID, G_TYPE_ARRAY, &_receive, G_TYPE_INVALID);
+
+  if (dbus_error != NULL) {
+	g_print("[DBUS_ERROR] %s\n", dbus_error->message);
+	return FALSE;
+  }
+
   vdepn_application_pid = getpid();
 
   if (vdepn_application_pid <= 1)

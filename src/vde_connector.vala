@@ -58,7 +58,6 @@ namespace VDEPN.Manager
 																	conf.user,
 																	conf.machine,
 																	conf.ip_address);
-				Helper.debug(Helper.TAG_DEBUG, "Creating new connection");
 				active_connections.append(new_one);
 				return true;
 			}
@@ -102,7 +101,6 @@ namespace VDEPN.Manager
 				this.conn_id = conn_id;
 				GLib.FileUtils.get_contents("/tmp/vdepn-" + conn_id + ".pid", out pidtmp);
 				vde_switch_pid = pidtmp.to_int();
-				Helper.debug(Helper.TAG_DEBUG, "Grabbed pid " + vde_switch_pid.to_string());
 			}
 			catch (Error e) {
 				Helper.debug(Helper.TAG_ERROR, e.message);
@@ -149,17 +147,13 @@ namespace VDEPN.Manager
 
 				GLib.FileUtils.set_contents(temp_file, script, -1);
 				GLib.FileUtils.chmod(temp_file, 0700);
-				Helper.debug(Helper.TAG_DEBUG, "Saved script in " + temp_file);
-				Helper.debug(Helper.TAG_DEBUG, "Launching script with pkexec");
 				string command = pkexec_cmd + " " + temp_file;
 				Process.spawn_command_line_sync(command, null, null, null);
 
 				GLib.FileUtils.unlink(temp_file);
-				Helper.debug(Helper.TAG_DEBUG, "Unlinked temp file");
 				string pidtmp;
 				GLib.FileUtils.get_contents("/tmp/vdepn-" + conn_id + ".pid", out pidtmp, null);
 				vde_switch_pid = pidtmp.to_int();
-				Helper.debug(Helper.TAG_DEBUG, "vde switch pid: " + vde_switch_pid.to_string());
 			}
 			catch (Error e) {
 				Helper.debug(Helper.TAG_ERROR, e.message);
@@ -201,14 +195,8 @@ namespace VDEPN.Manager
 				Process.spawn_command_line_sync(command, out cmd_result, null, null);
 				tmp_split = cmd_result.split(" ", 0);
 				ifconfig_cmd = tmp_split[1].chomp();
-
-				Helper.debug(Helper.TAG_DEBUG, "vde_switch is at " + vde_switch_cmd);
-				Helper.debug(Helper.TAG_DEBUG, "vde_plug   is at " + vde_plug_cmd);
-				Helper.debug(Helper.TAG_DEBUG, "dpipe      is at " + dpipe_cmd);
-				Helper.debug(Helper.TAG_DEBUG, "pkexec     is at " + pkexec_cmd);
-				Helper.debug(Helper.TAG_DEBUG, "pgrep      is at " + pgrep_cmd);
-				Helper.debug(Helper.TAG_DEBUG, "ifconfig   is at " + ifconfig_cmd);
 			}
+
 			catch (GLib.SpawnError e) {
 				Helper.debug(Helper.TAG_ERROR, e.message);
 			}
@@ -218,9 +206,6 @@ namespace VDEPN.Manager
 			try {
 				string script;
 				string temp_file;
-				Helper.debug(Helper.TAG_DEBUG,
-							 "Removing connection with pid: /tmp/vdepn-" +
-							 conn_id + ".pid");
 				get_paths();
 
 				GLib.FileUtils.open_tmp("kill-vdepn-XXXXXX.sh", out temp_file);

@@ -229,7 +229,6 @@ namespace VDEPN
 					else {
 						// Deactivate Connection
 						activate_connection.label = "Activate";
-						Helper.debug(Helper.TAG_DEBUG, "Deactivated Connection " + conn_name);
 						connections_manager.rm_connection(conn_name);
 						try {
 							conn_notify_deactivated.update(Config.PACKAGE_NAME, Helper.NOTIFY_DEACTIVE +
@@ -247,7 +246,6 @@ namespace VDEPN
 		}
 
 		private void build_notebook() {
-			Helper.debug(Helper.TAG_DEBUG, "Creating " + conf_list.length().to_string() + " pages");
 			foreach (VDEConfiguration v in conf_list)
 				add_notebook_page(v);
 
@@ -290,7 +288,6 @@ namespace VDEPN
 									confirm.destroy();
 								else {
 									VDEConfiguration rem = conf_list.nth_data(conn_id);
-									Helper.debug(Helper.TAG_DEBUG, "Remove connection " + rem.connection_name);
 									conf_holder.update_file(null, rem, true);
 									conf_list.remove(rem);
 									conf_pages.next_page();
@@ -321,7 +318,6 @@ namespace VDEPN
 						(ev, resp) => {
 							if (resp == 0) {
 								VDEConfiguration new_conf = new VDEConfiguration.with_defaults(new_conf_entry.text);
-								Helper.debug(Helper.TAG_DEBUG, "New connection");
 								conf_list.append(new_conf);
 								add_notebook_page(new_conf);
 								new_conf_dialog.destroy();
@@ -362,12 +358,10 @@ namespace VDEPN
 					}
 					about.close.connect(
 						(ev) => {
-							Helper.debug(Helper.TAG_DEBUG, "Close dialog");
 							about.destroy();
 						});
 					about.response.connect(
 						(ev) => {
-							Helper.debug(Helper.TAG_DEBUG, "Response (close)");
 							about.destroy();
 						});
 					about.run();

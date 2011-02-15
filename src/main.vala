@@ -65,13 +65,7 @@ namespace VDEPN
 
 			// Configuration dir exists..
 			if (prog_dir.query_exists(null)) {
-				Helper.debug(Helper.TAG_DEBUG, "Configuration dir exists");
-				if (prog_xml.query_exists(null))
-					Helper.debug(Helper.TAG_DEBUG, "Configuration file exists");
-
-				// ..but it hasn't got a connections.xml file!
-				else {
-					Helper.debug(Helper.TAG_DEBUG, "Creating new default connections file");
+				if (!(prog_xml.query_exists(null))) {
 					Doc conf = default_configuration();
 					conf.save_file(get_user_config_dir() + Helper.XML_FILE);
 				}
@@ -79,7 +73,6 @@ namespace VDEPN
 
 			// Configuration dir doesn't exist
 			else {
-				Helper.debug(Helper.TAG_DEBUG, "Creating new directory with default configuration file");
 				DirUtils.create(get_user_config_dir() + Helper.PROG_DATA_DIR, 0775);
 				Doc conf = default_configuration();
 				conf.save_file(get_user_config_dir() + Helper.XML_FILE);

@@ -4,6 +4,7 @@ AM_CPPFLAGS = \
 			$(GTK_CFLAGS) \
 			$(LIBNOTIFY_CFLAGS) \
 			$(POLKIT_CFLAGS) \
+			$(DBUS_GLIB_CFLAGS) \
 			$(LIBXML_CFLAGS)
 
 AM_VALAFLAGS = \
@@ -29,4 +30,5 @@ vde_manager_LDFLAGS = \
 			$(GTK_LIBS) \
 			$(LIBNOTIFY_LIBS) \
 			$(POLKIT_LIBS) \
+			$(DBUS_GLIB_LIBS) \
 			$(LIBXML_LIBS)

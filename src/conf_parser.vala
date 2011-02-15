@@ -73,7 +73,6 @@ namespace VDEPN
 			Xml.Attr* id;
 			/* parse node and create a configuration */
 			//stdout.printf("Parsing configuration..\n");
-			Helper.debug(Helper.TAG_DEBUG, "Parsing configuration");
 
 			/* unique name for the connection */
 			id = conf_root->has_prop("id");
@@ -147,8 +146,6 @@ namespace VDEPN
 				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS("ip address is missing");
 			if ((password == null) && (use_keys == false))
 				Helper.debug(Helper.TAG_WARNING, "configuration with empty password set");
-
-			Helper.debug(Helper.TAG_DEBUG, "Configuration for " + connection_name + " saved");
 		}
 
 		public void update_configuration(string new_sock, string new_machine, string new_user,
@@ -262,32 +259,21 @@ namespace VDEPN
 				root_elem->add_child(new_conn_root_node);
 
 			if (index < 0) {
-				if (!rem_conf) {
-					Helper.debug(Helper.TAG_DEBUG, "Appending new configuration to configurations list");
+				if (!rem_conf)
 					configurations.append(v);
-				}
-				else
-					Helper.debug(Helper.TAG_WARNING, "Configuration to be removed wasn't in the configurations list");
 			}
 
 			else {
-				if (!rem_conf)
-					Helper.debug(Helper.TAG_WARNING, "Configuration was already in the configurations list");
-				else {
-					Helper.debug(Helper.TAG_DEBUG, "Removing the configuration");
+				if (rem_conf)
 					configurations.remove(v);
-				}
 			}
 
-			Helper.debug(Helper.TAG_DEBUG, "updating file");
 			foreach (VDEConfiguration v_conf in configurations) {
 				Xml.Node *conf_node = v_conf.store_configuration(null);
 				if (!(conf_node->has_prop("id")->children->content == conf_id))
 					root_elem->add_child(conf_node);
 			}
 
-			Helper.debug(Helper.TAG_DEBUG, "Creating new configuration");
-			Helper.debug(Helper.TAG_DEBUG, "Storing " + Environment.get_user_config_dir() + Helper.XML_FILE);
 			new_conf.save_file(Environment.get_user_config_dir() + Helper.XML_FILE);
 		}
 
