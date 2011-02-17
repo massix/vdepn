@@ -79,12 +79,6 @@ namespace VDEPN
 			}
 
 			Gtk.init(ref args);
-			/* get a new authority from polkit */
-			if (Polkit.Wrapper.init_wrapper())
-				Helper.debug(Helper.TAG_DEBUG, "PolKit Subject PID: " + Polkit.Wrapper.get_pid_from_subject().to_string());
-			else
-				Helper.debug(Helper.TAG_ERROR, "PolKit didn't give me a new authority :-(");
-
 			set_application_name("VDE PN Manager");
 			set_prgname("VDE PN Manager");
 			Notify.init("VDE PN Manager");

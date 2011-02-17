@@ -85,9 +85,7 @@ namespace VDEPN
 			// build a notebook page for each configuration
 			int index = conf_list.index(v);
 			bool button_status = false;
-			Table conf_table = new Table(9, 2, true);
-			HButtonBox buttons_container = new HButtonBox();
-			Frame polkit_frame = Polkit.Wrapper.get_new_frame("Activate Connection");
+			Table conf_table = new Table(8, 2, true);
 
 			string conn_name = v.connection_name;
 			string conn_machine = v.machine;
@@ -157,15 +155,8 @@ namespace VDEPN
 			conf_table.attach_defaults(button_ssh, 0, 1, 5, 6);
 			conf_table.attach_defaults(button_root, 1, 2, 5, 6);
 
-			buttons_container.add(save_configuration);
-			buttons_container.add(activate_connection);
-
-			conf_table.attach_defaults(polkit_frame, 0, 2, 6, 8);
-
-			conf_table.attach_defaults(buttons_container, 0, 2, 8, 9);
-
-			//conf_table.attach_defaults(save_configuration, 0, 1, 7, 8);
-			//conf_table.attach_defaults(activate_connection, 1, 2, 7, 8);
+			conf_table.attach_defaults(save_configuration, 0, 1, 7, 8);
+			conf_table.attach_defaults(activate_connection, 1, 2, 7, 8);
 
 			ipaddr_label.xalign = (float) 0;
 			socket_label.xalign = (float) 0;
@@ -193,8 +184,8 @@ namespace VDEPN
 							tmp.update_configuration(socket_entry.get_text(), machine_entry.get_text(),
 													 user_entry.get_text(), ipaddr_entry.get_text(),
 													 button_root.active, button_ssh.active);
-
 							connections_manager.new_connection(tmp);
+
 							try {
 								conn_notify_active.update(Config.PACKAGE_NAME, Helper.NOTIFY_ACTIVE +
 														  " (" + tmp.connection_name + ")",
@@ -247,7 +238,7 @@ namespace VDEPN
 
 		private void build_notebook() {
 			foreach (VDEConfiguration v in conf_list)
-				add_notebook_page(v);
+			add_notebook_page(v);
 
 			conf_pages.show_all();
 			main_vbox.pack_end(conf_pages, true, true, 0);
@@ -390,11 +381,13 @@ namespace VDEPN
 
 
 	// creates a new icon in the system tray, linked to the parent
-	public class TrayIcon : Gtk.StatusIcon {
+	public class TrayIcon : Gtk.StatusIcon
+	{
 		private ConfigurationsList parent;
 		private Manager.VDEConnector parent_connector;
 
-		public TrayIcon(ConfigurationsList linked) {
+		public TrayIcon(ConfigurationsList linked)
+		{
 			set_from_file(Helper.ICON_PATH);
 			title = "VDE PN Manager";
 			set_tooltip_text("VDE PN Manager");
@@ -406,11 +399,13 @@ namespace VDEPN
 				});
 		}
 
-		public void show() {
+		public void show()
+		{
 			visible = true;
 		}
 
-		public void hide() {
+		public void hide()
+		{
 			visible = false;
 		}
 	}
