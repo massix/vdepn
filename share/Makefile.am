@@ -1,5 +1,5 @@
-imagedir=$(prefix)/share
+imagedir=$(prefix)/share/icons/hicolor/scalable/apps
 
 image_DATA = \
-	v2.png \
-	v2_big.png
+	vdepn.svg \
+	vdepn_big.svg

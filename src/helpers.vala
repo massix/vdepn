@@ -27,7 +27,8 @@ namespace VDEPN {
 		public const string PROG_DATA_DIR = "/vdepn";
 		public const string NOTIFY_ACTIVE = "Connection activated";
 		public const string NOTIFY_DEACTIVE = "Connection deactivated";
-		public const string ICON_PATH = Config.PKGDATADIR + "/share/v2.png";
+		public const string ICON_PATH = Config.PKGDATADIR + "/share/icons/hicolor/scalable/apps/vdepn.svg";
+		public const string LOGO_PATH = Config.PKGDATADIR + "/share/icons/hicolor/scalable/apps/vdepn_big.svg";
 
 		public const string XML_FILE = PROG_DATA_DIR + "/connections.xml";
 

@@ -40,7 +40,6 @@ namespace VDEPN
 			def_conf.set_root_element(root_elem);
 			root_elem->add_child(conn_root_elem);
 			conn_root_elem->set_prop("id", "test-connection");
-			conn_root_elem->set_prop("root", "true");
 			conn_root_elem->add_child(conn_sock_path);
 			conn_sock_path->set_content("/tmp/test-connection");
 			conn_root_elem->add_child(conn_ip_address);
@@ -50,6 +49,7 @@ namespace VDEPN
 			conn_user->set_content("vde0");
 			conn_root_elem->add_child(conn_machine);
 			conn_machine->set_content("vde2.v2.cs.unibo.it");
+			conn_machine->set_prop("checkhost", "true");
 			conn_root_elem->add_child(conn_password);
 			conn_password->set_prop("required", "false");
 			conn_password->set_prop("usekeys", "false");

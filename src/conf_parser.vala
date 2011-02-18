@@ -20,29 +20,21 @@
 using Xml;
 using Gtk;
 
-namespace VDEPN
-{
-	public errordomain XMLError
-	{
-		FILE_NOT_FOUND,
-		XML_PARSING_ERROR
+namespace VDEPN {
+	public errordomain XMLError {
+		FILE_NOT_FOUND, XML_PARSING_ERROR
 	}
 
-	public errordomain VDEConfigurationError
-	{
-		NULL_ID,
-		NOT_ENOUGH_PARAMETERS,
-		UNRECOGNIZED_OPTION,
-		EMPTY_PASSWORD
+	public errordomain VDEConfigurationError {
+		NULL_ID, NOT_ENOUGH_PARAMETERS,
+		UNRECOGNIZED_OPTION, EMPTY_PASSWORD
 	}
 
-	public enum sock_type
-	{
+	public enum sock_type {
 		PRIVATE, PUBLIC
 	}
 
-	protected class VDEConfiguration : GLib.Object
-	{
+	protected class VDEConfiguration : GLib.Object {
 		/* Read only properties */
 		public string	connection_name { get; private set; }
 		public string	socket_path { get; private set; }
@@ -53,9 +45,9 @@ namespace VDEPN
 		public string	ip_address { get; private set; }
 		public bool		use_dhcp { get; private set; }
 		public bool		use_keys { get; private set; }
-		public bool		root_required { get; private set; }
+		public bool		checkhost { get; private set; }
 
-		public VDEConfiguration.with_defaults(string conf_name) {
+		public VDEConfiguration.with_defaults (string conf_name) {
 			connection_name = conf_name;
 			socket_path = "/tmp/change-me";
 			user = "change-me";
@@ -65,63 +57,59 @@ namespace VDEPN
 			ip_address = "127.0.0.1";
 			use_dhcp = false;
 			use_keys = false;
-			root_required = false;
+			checkhost = true;
 		}
 
-		protected VDEConfiguration(Xml.Node *conf_root) throws VDEConfigurationError {
+		protected VDEConfiguration (Xml.Node *conf_root) throws VDEConfigurationError {
 			socket_path = null;
 			Xml.Attr* id;
 			/* parse node and create a configuration */
-			//stdout.printf("Parsing configuration..\n");
 
 			/* unique name for the connection */
-			id = conf_root->has_prop("id");
+			id = conf_root->has_prop ("id");
 			if (id != null)
-				connection_name = id->children->get_content();
+				connection_name = id->children->get_content ();
 			else
-				throw new VDEConfigurationError.NULL_ID("Connection ID can't be omitted");
+				throw new VDEConfigurationError.NULL_ID ("Connection ID can't be omitted");
 
-			/* wether if requires root or not */
-			if ((conf_root->has_prop("root")->children->get_content() == "true"))
-				root_required = true;
-
-			else
-				root_required = false;
-
-			while (conf_root->child_element_count() > 0) {
-				Xml.Node *conf_node = conf_root->first_element_child();
-				conf_node->unlink();
+			while (conf_root->child_element_count () > 0) {
+				Xml.Node *conf_node = conf_root->first_element_child ();
+				conf_node->unlink ();
 				switch (conf_node->name) {
 				case "sockpath":
-					socket_path = conf_node->get_content();
+					socket_path = conf_node->get_content ();
 					break;
 				case "ipaddress":
 					Xml.Attr *dhcp;
-					dhcp = conf_node->has_prop("dhcp");
-					if ((dhcp != null) && (dhcp->children->get_content() == "true")) {
+					dhcp = conf_node->has_prop ("dhcp");
+					if ((dhcp != null) && (dhcp->children->get_content () == "true")) {
 						ip_address = null;
 						use_dhcp = true;
 					}
 					else {
-						ip_address = conf_node->get_content();
+						ip_address = conf_node->get_content ();
 						use_dhcp = false;
 					}
 					break;
 				case "user":
-					user = conf_node->get_content();
+					user = conf_node->get_content ();
 					break;
 				case "machine":
-					machine = conf_node->get_content();
+					Xml.Attr *checkrequired;
+					machine = conf_node->get_content ();
+					checkrequired = conf_node->has_prop ("checkrequired");
+					if ((checkrequired != null) && (checkrequired->children->get_content () == "true"))
+						checkhost = true;
+
 					break;
 				case "password":
 					Xml.Attr *required;
 					Xml.Attr *usekeys;
-					required = conf_node->has_prop("required");
-					usekeys = conf_node->has_prop("usekeys");
-					if ((required != null) && (required->children->get_content() == "false")) {
-						if ((usekeys != null) && (usekeys->children->get_content() == "true"))
+					required = conf_node->has_prop ("required");
+					usekeys = conf_node->has_prop ("usekeys");
+					if ((required != null) && (required->children->get_content () == "false")) {
+						if ((usekeys != null) && (usekeys->children->get_content () == "true"))
 							use_keys = true;
-
 						else
 							use_keys = false;
 
@@ -131,31 +119,31 @@ namespace VDEPN
 
 					break;
 				default:
-					throw new VDEConfigurationError.UNRECOGNIZED_OPTION("Option not known");
+					throw new VDEConfigurationError.UNRECOGNIZED_OPTION ("Option not known");
 				}
 
 			}
 
 			if (socket_path == null)
-				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS("field sockpath is missing");
+				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS ("field sockpath is missing");
 			if (machine == null)
-				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS("field machine is missing");
+				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS ("field machine is missing");
 			if (user == null)
-				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS("field user is missing");
+				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS ("field user is missing");
 			if (ip_address == null)
-				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS("ip address is missing");
+				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS ("ip address is missing");
 			if ((password == null) && (use_keys == false))
-				Helper.debug(Helper.TAG_WARNING, "configuration with empty password set");
+				Helper.debug (Helper.TAG_WARNING, "configuration with empty password set");
 		}
 
-		public void update_configuration(string new_sock, string new_machine, string new_user,
-										 string new_ip_address, bool new_root_required,
-										 bool new_ssh_keys) {
+		public void update_configuration (string new_sock, string new_machine, string new_user,
+										  string new_ip_address, bool new_checkhost,
+										  bool new_ssh_keys) {
 			socket_path = new_sock;
 			machine = new_machine;
 			user = new_user;
 			ip_address = new_ip_address;
-			root_required = new_root_required;
+			checkhost = new_checkhost;
 			use_keys = new_ssh_keys;
 		}
 
@@ -168,36 +156,36 @@ namespace VDEPN
 		 * the Parser just takes the NodeList of each configuration it
 		 * has)
 		 */
-		public Xml.Node* store_configuration(VDEParser? p) {
-			Xml.Node *root_node = new Xml.Node(null, "connection");
-			root_node->set_prop("id", connection_name);
-			root_node->set_prop("root", root_required.to_string());
+		public Xml.Node* store_configuration (VDEParser? p) {
+			Xml.Node *root_node = new Xml.Node (null, "connection");
+			root_node->set_prop ("id", connection_name);
 
-			Xml.Node *sock_path_node = new Xml.Node(null, "sockpath");
-			sock_path_node->set_content(socket_path);
+			Xml.Node *sock_path_node = new Xml.Node (null, "sockpath");
+			sock_path_node->set_content (socket_path);
 
-			Xml.Node *ipaddress_node = new Xml.Node(null, "ipaddress");
-			ipaddress_node->set_prop("dhcp", "false");
-			ipaddress_node->set_content(ip_address);
+			Xml.Node *ipaddress_node = new Xml.Node (null, "ipaddress");
+			ipaddress_node->set_prop ("dhcp", "false");
+			ipaddress_node->set_content (ip_address);
 
-			Xml.Node *user_node = new Xml.Node(null, "user");
-			user_node->set_content(user);
+			Xml.Node *user_node = new Xml.Node (null, "user");
+			user_node->set_content (user);
 
-			Xml.Node *machine_node = new Xml.Node(null, "machine");
-			machine_node->set_content(machine);
+			Xml.Node *machine_node = new Xml.Node (null, "machine");
+			machine_node->set_content (machine);
+			machine_node->set_prop ("checkrequired", checkhost.to_string ());
 
-			Xml.Node *password_node = new Xml.Node(null, "password");
-			password_node->set_prop("required", "false");
-			password_node->set_prop("usekeys", "false");
+			Xml.Node *password_node = new Xml.Node (null, "password");
+			password_node->set_prop ("required", "false");
+			password_node->set_prop ("usekeys", "false");
 
-			root_node->add_child(sock_path_node);
-			root_node->add_child(ipaddress_node);
-			root_node->add_child(user_node);
-			root_node->add_child(machine_node);
-			root_node->add_child(password_node);
+			root_node->add_child (sock_path_node);
+			root_node->add_child (ipaddress_node);
+			root_node->add_child (user_node);
+			root_node->add_child (machine_node);
+			root_node->add_child (password_node);
 
 			if (p != null) {
-				p.update_file(root_node, this, false);
+				p.update_file (root_node, this, false);
 				return null;
 			}
 			else
@@ -206,80 +194,77 @@ namespace VDEPN
 	}
 
 
-	public class VDEParser : GLib.Object
-	{
+	public class VDEParser : GLib.Object {
 		private List<VDEConfiguration> configurations;
 		private Doc *configuration_file;
 
-		public VDEParser(string path) throws XMLError
-		{
+		public VDEParser (string path) throws XMLError {
 			Xml.Node *root_node;
 			Xml.Node *connection_node;
-			List<Xml.Node*> connection_node_list = new List<Xml.Node*>();
-			configurations = new List<VDEConfiguration>();
+			List<Xml.Node*> connection_node_list = new List<Xml.Node*> ();
+			configurations = new List<VDEConfiguration> ();
 
 			/* init XML parser */
-			Parser.init();
-			configuration_file = Parser.parse_file(path);
-			root_node = configuration_file->get_root_element();
+			Parser.init ();
+			configuration_file = Parser.parse_file (path);
+			root_node = configuration_file->get_root_element ();
 
-			while((connection_node = root_node->first_element_child()) != null) {
-				connection_node = root_node->first_element_child();
-				connection_node->unlink();
-				connection_node_list.append(connection_node);
+			while((connection_node = root_node->first_element_child ()) != null) {
+				connection_node = root_node->first_element_child ();
+				connection_node->unlink ();
+				connection_node_list.append (connection_node);
 			}
 
 			/* read it */
 			/* foreach <connection> node */
 			foreach (Xml.Node* n in connection_node_list) {
 				try {
-					configurations.append(new VDEConfiguration(n));
+					configurations.append (new VDEConfiguration (n));
 				}
 				catch (GLib.Error e) {
-					Helper.debug(Helper.TAG_ERROR, e.message);
+					Helper.debug (Helper.TAG_ERROR, e.message);
 				}
 			}
 		}
 
-		public void update_file(Xml.Node *new_conn_root_node, VDEConfiguration v, bool rem_conf) {
-			Doc new_conf = new Doc();
-			int index = configurations.index(v);
+		public void update_file (Xml.Node *new_conn_root_node, VDEConfiguration v, bool rem_conf) {
+			Doc new_conf = new Doc ();
+			int index = configurations.index (v);
 			string conf_id;
 			if (new_conn_root_node != null)
-				conf_id = new_conn_root_node->has_prop("id")->children->content;
+				conf_id = new_conn_root_node->has_prop ("id")->children->content;
 			else
 				conf_id = "NONEXISTANTCONFIGURATION";
 
-			Xml.Node *root_elem = new Xml.Node(null, "vdemanager");
+			Xml.Node *root_elem = new Xml.Node (null, "vdemanager");
 
-			new_conf.set_root_element(root_elem);
+			new_conf.set_root_element (root_elem);
 
 			/* segfaults */
 			if (new_conn_root_node != null)
-				root_elem->add_child(new_conn_root_node);
+				root_elem->add_child (new_conn_root_node);
 
 			if (index < 0) {
 				if (!rem_conf)
-					configurations.append(v);
+					configurations.append (v);
 			}
 
 			else {
 				if (rem_conf)
-					configurations.remove(v);
+					configurations.remove (v);
 			}
 
 			foreach (VDEConfiguration v_conf in configurations) {
 				Xml.Node *conf_node = v_conf.store_configuration(null);
 				if (!(conf_node->has_prop("id")->children->content == conf_id))
-					root_elem->add_child(conf_node);
+					root_elem->add_child (conf_node);
 			}
 
-			new_conf.save_file(Environment.get_user_config_dir() + Helper.XML_FILE);
+			new_conf.save_file (Environment.get_user_config_dir () + Helper.XML_FILE);
 		}
 
-		public List<VDEConfiguration> get_configurations()
-		{
-			return configurations.copy();
+		public List<VDEConfiguration> get_configurations () {
+			return configurations.copy ();
 		}
 	}
 }
