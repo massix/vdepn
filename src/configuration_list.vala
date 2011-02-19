@@ -219,7 +219,7 @@ namespace VDEPN {
 
 			about_item.activate.connect ((ev) => {
 					AboutDialog about = new AboutDialog ();
-					about.authors = {"Massimo Gengarelli"};
+					about.authors = {"Massimo Gengarelli <gengarel@cs.unibo.it>"};
 					about.copyright = "(C) 2011 Massimo Gengarelli";
 					about.license = Helper.LICENSE;
 					about.program_name = Config.PACKAGE_NAME;
