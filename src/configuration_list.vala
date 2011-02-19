@@ -57,7 +57,6 @@ namespace VDEPN {
 			conf_pages.scrollable = true;
 			title = caption;
 			resize (200,200);
-			resizable = false;
 			this.delete_event.connect((ev) => {
 					visible = false;;
 					return true;

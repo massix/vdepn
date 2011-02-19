@@ -59,7 +59,6 @@ namespace VDEPN {
 		private VNotification notificator;
 
 		public VDEConfiguration config		{ get; private set; }
-		public Table conf_table				{ get; private set; }
 		public Entry conn_name_entry		{ get; private set; }
 		public Entry machine_entry			{ get; private set; }
 		public Entry user_entry				{ get; private set; }
@@ -72,10 +71,10 @@ namespace VDEPN {
 
 		/* Builds a new Notebook Page */
 		public ConfigurationPage (VDEConfiguration v, ConfigurationsList father) {
-			resize (9, 2);
-			homogeneous = false;
-			row_spacing = 3;
+			/* chain up to the table constructor */
+			GLib.Object (n_rows: 7, n_columns: 2, homogeneous: true);
 
+			row_spacing = 3;
 
 			this.config = v;
 			this.father = father;
@@ -90,7 +89,6 @@ namespace VDEPN {
 
 			index = father.conf_list.index (config);
 			button_status = false;
-			conf_table = new Table (8, 2, true);
 
 			Label conn_name_label = new Label ("<b>Connection</b> name:");
 			conn_name_entry = new Entry ();
@@ -167,7 +165,7 @@ namespace VDEPN {
 			attach_defaults (button_ssh, 0, 1, 5, 6);
 			attach_defaults (button_checkhost, 1, 2, 5, 6);
 
-			attach_defaults (activate_connection, 0, 2, 8, 9);
+			attach_defaults (activate_connection, 0, 2, 7, 8);
 
 			ipaddr_label.xalign = (float) 0;
 			socket_label.xalign = (float) 0;
@@ -236,7 +234,7 @@ namespace VDEPN {
 
 					/* it's enough, I hate spinners. BURN'EM WITH FIRE */
 					conn_spinner.stop ();
-					conf_table.remove (conn_spinner);
+					remove (conn_spinner);
 					conn_spinner.destroy ();
 				});
 		}
