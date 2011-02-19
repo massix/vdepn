@@ -65,8 +65,7 @@ namespace VDEPN {
 			try {
 				conf_holder = new VDEParser (prg_files + "/connections.xml");
 			}
-			catch (Error e)
-			{
+			catch (Error e) {
 				Helper.debug (Helper.TAG_ERROR, "Error while parsing XML file");
 			}
 
@@ -101,14 +100,9 @@ namespace VDEPN {
 			exit_item.add_accelerator ("activate", accel_group, (uint) 'q', Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE);
 
 			file_item.set_accel_group (accel_group);
-			file_item.set_always_show_image (true);
-			new_conn_item.set_always_show_image (true);
 			new_conn_item.set_accel_group (accel_group);
-			save_conn_item.set_always_show_image (true);
 			save_conn_item.set_accel_group (accel_group);
-			rm_conn_item.set_always_show_image (true);
 			rm_conn_item.set_accel_group (accel_group);
-			exit_item.set_always_show_image (true);
 			exit_item.set_accel_group (accel_group);
 
 			file_menu.append (new_conn_item);
@@ -213,8 +207,6 @@ namespace VDEPN {
 			help_menu.append (about_item);
 
 			about_item.add_accelerator ("activate", accel_group, (uint) 'h', Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE);
-
-			about_item.set_always_show_image (true);
 			about_item.set_accel_group (accel_group);
 
 			about_item.activate.connect ((ev) => {
