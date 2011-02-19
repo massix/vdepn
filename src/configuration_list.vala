@@ -314,7 +314,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 							conn.activate.connect (() => {
 									if (!parent.visible)
 										parent.visible = true;
+									parent.present ();
 									parent.switch_page (temp.conn_id);
+									inner_menu.hide ();
 								});
 						}
 					}
