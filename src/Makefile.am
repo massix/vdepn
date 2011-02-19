@@ -15,10 +15,11 @@ AM_VALAFLAGS = \
 bin_PROGRAMS = vde_manager
 
 vde_manager_SOURCES = \
-			mainwindow.vala \
+			configuration_list.vala \
 			conf_parser.vala \
-			helpers.vala \
+			helper.vala \
 			main.vala \
+			configuration_page.vala \
 			vde_connector.vala
 
 vde_manager_LDFLAGS = \
