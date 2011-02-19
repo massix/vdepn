@@ -109,6 +109,7 @@ namespace VDEPN {
 		private ConfigurationsList father;
 		private VNotification notificator;
 		private HBox checkbuttons_box;
+		private Spinner conn_spinner;
 
 		public ConfigurationProperty conn_name_property		{ get; private set; }
 		public ConfigurationProperty machine_property		{ get; private set; }
@@ -147,6 +148,8 @@ namespace VDEPN {
 			button_ssh = new CheckButton.with_label ("Use SSH keys");
 			button_checkhost = new CheckButton.with_label ("Check Host");
 
+			conn_spinner = new Spinner ();
+
 			checkbuttons_box.pack_start (button_ssh);
 			checkbuttons_box.pack_start (button_checkhost);
 
@@ -161,71 +164,63 @@ namespace VDEPN {
 			pack_start (socket_property, false, false, 0);
 			pack_start (ipaddr_property, false, false, 0);
 			pack_start (checkbuttons_box);
+			pack_start (conn_spinner);
 			pack_start (activate_connection);
 
 			/* tries to activate the connection, showing a fancy
 			 * spinner while the Application works in background */
 			activate_connection.clicked.connect ((ev) => {
-					Spinner conn_spinner = new Spinner ();
-
-					/* the empty line between the checkbuttons and the buttons */
-					/* attach_defaults (conn_spinner, 0, 2, 6, 7); */
-
 					conn_spinner.start ();
-					show_all ();
 
-					/* check if we can do multithreading (not implemented yet) */
-					if (Thread.supported ()) {
-						Helper.debug (Helper.TAG_DEBUG, "Threads are supported");
-						/* TODO: multithreaded activation/deactivation of the connection */
-					}
+					Thread.create<void> (() => {
+							/* this actually activates the connection */
+							if (button_status == false) {
+								try {
+									config.update_configuration (socket_property.curr_value, machine_property.curr_value,
+																 user_property.curr_value, ipaddr_property.curr_value,
+																 button_checkhost.active, button_ssh.active);
 
-					/* this actually activates the connection */
-					if (button_status == false) {
-						try {
-							config.update_configuration (socket_property.curr_value, machine_property.curr_value,
-														 user_property.curr_value, ipaddr_property.curr_value,
-														 button_checkhost.active, button_ssh.active);
+									/* this may throws exceptions */
+									father.connections_manager.new_connection (config);
+									button_status = true;
+									activate_connection.label = "Deactivate";
+									notificator.conn_active ();
+								}
 
-							/* this may throws exceptions */
-							father.connections_manager.new_connection (config);
-							button_status = true;
-							activate_connection.label = "Deactivate";
-							notificator.conn_active ();
-						}
+								/* woah.. something bad happened :( */
+								catch (Manager.ConnectorError e) {
+									Gdk.threads_enter ();
+									Dialog error_dialog = new Dialog.with_buttons ("Error", father, DialogFlags.MODAL);
+									Label err_label = new Label ("<b>" + e.message + "</b>");
+									err_label.use_markup = true;
+									error_dialog.vbox.add (new Label ("Error while activating connection"));
+									error_dialog.vbox.add (err_label);
+									error_dialog.add_button ("Close", 0);
+									error_dialog.vbox.show_all ();
+									error_dialog.close.connect ((ev) => {
+											error_dialog.destroy ();
+										});
+									error_dialog.response.connect ((ev, resp) => {
+											error_dialog.destroy ();
+										});
 
-						/* woah.. something bad happened :( */
-						catch (Manager.ConnectorError e) {
-							Dialog error_dialog = new Dialog.with_buttons ("Error", father, DialogFlags.MODAL);
-							Label err_label = new Label ("<b>" + e.message + "</b>");
-							err_label.use_markup = true;
-							error_dialog.vbox.add (new Label ("Error while activating connection"));
-							error_dialog.vbox.add (err_label);
-							error_dialog.add_button ("Close", 0);
-							error_dialog.vbox.show_all ();
-							error_dialog.close.connect ((ev) => {
-									error_dialog.destroy ();
-								});
-							error_dialog.response.connect ((ev, resp) => {
-									error_dialog.destroy();
-								});
+									error_dialog.run ();
+									Gdk.threads_leave ();
+								}
+							}
 
-							error_dialog.run();
-						}
-					}
+							/* Deactivate the connection */
+							else {
+								activate_connection.label = "Activate";
+								father.connections_manager.rm_connection (config.connection_name);
+								button_status = false;
+								notificator.conn_inactive ();
+							}
 
-					/* Deactivate the connection */
-					else {
-						activate_connection.label = "Activate";
-						father.connections_manager.rm_connection (config.connection_name);
-						button_status = false;
-						notificator.conn_inactive ();
-					}
+							/* it's enough, I hate spinners. BURN'EM WITH FIRE */
+							conn_spinner.stop ();
 
-					/* it's enough, I hate spinners. BURN'EM WITH FIRE */
-					conn_spinner.stop ();
-					/* remove (conn_spinner); */
-					conn_spinner.destroy ();
+						}, false);
 				});
 		}
 

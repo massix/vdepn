@@ -79,13 +79,18 @@ namespace VDEPN
 			}
 
 			Gtk.init(ref args);
+			Gdk.threads_init ();
+
 			set_application_name("VDE PN Manager");
 			set_prgname("VDE PN Manager");
 			Notify.init("VDE PN Manager");
 			ConfigurationsList mainWindow = new ConfigurationsList("VDE PN Manager");
 			TrayIcon tray = new TrayIcon(mainWindow);
 			tray.show();
+
+			Gdk.threads_enter ();
 			Gtk.main();
+			Gdk.threads_leave ();
 			Notify.uninit();
 		}
 	}
