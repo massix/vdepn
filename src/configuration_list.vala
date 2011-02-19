@@ -125,8 +125,8 @@ namespace VDEPN {
 					}
 					else {
 						ConfigurationPage page = pages_list.nth_data (conn_id);
-						page.config.update_configuration (page.socket_entry.text, page.machine_entry.text,
-														  page.user_entry.text, page.ipaddr_entry.text,
+						page.config.update_configuration (page.socket_property.curr_value, page.machine_property.curr_value,
+														  page.user_property.curr_value, page.ipaddr_property.curr_value,
 														  page.button_checkhost.active, page.button_ssh.active);
 						page.config.store_configuration (conf_holder);
 					}

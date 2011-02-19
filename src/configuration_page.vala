@@ -54,124 +54,114 @@ namespace VDEPN {
 		}
 	}
 
-	private class ConfigurationPage : Gtk.Table {
+	private class ConfigurationProperty : Gtk.HBox {
+		private Entry entry_value;
+		private Label label_value;
+		public string curr_value {
+			get {
+				return entry_value.text;
+			}
+
+			private set {
+				entry_value.text = value;
+			}
+		}
+
+		public bool editable {
+			get {
+				return entry_value.editable;
+			}
+
+			set {
+				entry_value.editable = value;
+			}
+		}
+
+		public bool use_markup {
+			get {
+				return label_value.use_markup;
+			}
+			set {
+				label_value.use_markup = value;
+			}
+		}
+
+		public ConfigurationProperty (string label, string start_value) {
+			GLib.Object (homogeneous: true, spacing: 10);
+
+			entry_value = new Entry ();
+			label_value = new Label (label);
+			label_value.xalign = (float) 0;
+			use_markup = true;
+
+			curr_value = start_value;
+			entry_value.changed.connect(() => {
+					entry_value.text = entry_value.text.replace (" ", "-");
+				});
+
+			pack_start (label_value, true, true, 0);
+			pack_start (entry_value, true, true, 16);
+			show_all ();
+		}
+	}
+
+	private class ConfigurationPage : Gtk.VBox {
 		private ConfigurationsList father;
 		private VNotification notificator;
+		private HBox checkbuttons_box;
 
-		public VDEConfiguration config		{ get; private set; }
-		public Entry conn_name_entry		{ get; private set; }
-		public Entry machine_entry			{ get; private set; }
-		public Entry user_entry				{ get; private set; }
-		public Entry socket_entry			{ get; private set; }
-		public Entry ipaddr_entry			{ get; private set; }
+		public ConfigurationProperty conn_name_property		{ get; private set; }
+		public ConfigurationProperty machine_property		{ get; private set; }
+		public ConfigurationProperty user_property			{ get; private set; }
+		public ConfigurationProperty socket_property		{ get; private set; }
+		public ConfigurationProperty ipaddr_property		{ get; private set; }
 		public CheckButton button_ssh		{ get; private set; }
 		public CheckButton button_checkhost { get; private set; }
+
+		public VDEConfiguration config		{ get; private set; }
 		public bool button_status			{ get; private set; }
 		public int index					{ get; private set; }
 
 		/* Builds a new Notebook Page */
 		public ConfigurationPage (VDEConfiguration v, ConfigurationsList father) {
-			/* chain up to the table constructor */
-			GLib.Object (n_rows: 7, n_columns: 2, homogeneous: true);
-
-			row_spacing = 3;
+			/* chain up to the vbox constructor */
+			GLib.Object (homogeneous: true, spacing: 2);
 
 			this.config = v;
 			this.father = father;
+			button_status = false;
 
 			notificator = new VNotification (config.connection_name);
 
-			string conn_name = config.connection_name;
-			string conn_machine = config.machine;
-			string conn_user = config.user;
-			string conn_socket = config.socket_path;
-			string conn_ipaddr = config.ip_address;
-
 			index = father.conf_list.index (config);
-			button_status = false;
 
-			Label conn_name_label = new Label ("<b>Connection</b> name:");
-			conn_name_entry = new Entry ();
-			conn_name_label.use_markup = true;
+			conn_name_property = new ConfigurationProperty ("Connection <b>name</b>:", config.connection_name);
+			conn_name_property.editable = false;
 
-			Label machine_label = new Label ("VDE <b>Machine</b>:");
-			machine_entry = new Entry ();
-			machine_label.use_markup = true;
-			machine_entry.changed.connect(() => {
-					machine_entry.text = machine_entry.text.replace (" ", "-");
-				});
+			machine_property = new ConfigurationProperty ("VDE <b>Machine</b>:", config.machine);
+			user_property = new ConfigurationProperty ("VDE <b>User</b>:" , config.user);
+			socket_property = new ConfigurationProperty ("<b>Socket</b> Path:", config.socket_path);
+			ipaddr_property = new ConfigurationProperty ("TUN/TAP <b>IPv4 Address</b>:", config.ip_address);
 
-			Label user_label = new Label ("VDE <b>User</b>:");
-			user_entry = new Entry ();
-			user_label.use_markup = true;
-			user_entry.changed.connect(() => {
-					user_entry.text = user_entry.text.replace (" ", "-");
-				});
-
-
-			Label socket_label = new Label ("<b>Socket</b> path:");
-			socket_entry = new Entry ();
-			socket_label.use_markup = true;
-			socket_entry.changed.connect(() => {
-					socket_entry.text = socket_entry.text.replace (" ", "-");
-				});
-
-
-			Label ipaddr_label = new Label ("TUN Interface <b>IPv4</b>:");
-			ipaddr_entry = new Entry ();
-			ipaddr_label.use_markup = true;
-			ipaddr_entry.changed.connect(() => {
-					ipaddr_entry.text = ipaddr_entry.text.replace (" ", "-");
-				});
-
+			checkbuttons_box = new HBox (true, 2);
 			button_ssh = new CheckButton.with_label ("Use SSH keys");
 			button_checkhost = new CheckButton.with_label ("Check Host");
+
+			checkbuttons_box.pack_start (button_ssh);
+			checkbuttons_box.pack_start (button_checkhost);
 
 			button_ssh.active = config.use_keys;
 			button_checkhost.active = config.checkhost;
 
 			Button activate_connection = get_button ();
 
-			machine_entry.editable = true;
-			machine_entry.set_text (conn_machine);
-
-			conn_name_entry.editable = false;
-			conn_name_entry.set_text (conn_name);
-
-			user_entry.editable = true;
-			user_entry.set_text (conn_user);
-
-			socket_entry.editable = true;
-			socket_entry.set_text (conn_socket);
-
-			ipaddr_entry.editable = true;
-			ipaddr_entry.set_text (conn_ipaddr);
-
-			attach_defaults (conn_name_label, 0, 1, 0, 1);
-			attach_defaults (conn_name_entry, 1, 2, 0, 1);
-
-			attach_defaults (machine_label, 0, 1, 1, 2);
-			attach_defaults (machine_entry, 1, 2, 1, 2);
-
-			attach_defaults (user_label, 0, 1, 2, 3);
-			attach_defaults (user_entry, 1, 2, 2, 3);
-
-			attach_defaults (socket_label, 0, 1, 3, 4);
-			attach_defaults (socket_entry, 1, 2, 3, 4);
-
-			attach_defaults (ipaddr_label, 0, 1, 4, 5);
-			attach_defaults (ipaddr_entry, 1, 2, 4, 5);
-
-			attach_defaults (button_ssh, 0, 1, 5, 6);
-			attach_defaults (button_checkhost, 1, 2, 5, 6);
-
-			attach_defaults (activate_connection, 0, 2, 7, 8);
-
-			ipaddr_label.xalign = (float) 0;
-			socket_label.xalign = (float) 0;
-			user_label.xalign = (float) 0;
-			machine_label.xalign = (float) 0;
-			conn_name_label.xalign = (float) 0;
+			pack_start (conn_name_property, false, false, 0);
+			pack_start (machine_property, false, false, 0);
+			pack_start (user_property, false, false, 0);
+			pack_start (socket_property, false, false, 0);
+			pack_start (ipaddr_property, false, false, 0);
+			pack_start (checkbuttons_box);
+			pack_start (activate_connection);
 
 			/* tries to activate the connection, showing a fancy
 			 * spinner while the Application works in background */
@@ -179,7 +169,7 @@ namespace VDEPN {
 					Spinner conn_spinner = new Spinner ();
 
 					/* the empty line between the checkbuttons and the buttons */
-					attach_defaults (conn_spinner, 0, 2, 6, 7);
+					/* attach_defaults (conn_spinner, 0, 2, 6, 7); */
 
 					conn_spinner.start ();
 					show_all ();
@@ -193,8 +183,8 @@ namespace VDEPN {
 					/* this actually activates the connection */
 					if (button_status == false) {
 						try {
-							config.update_configuration (socket_entry.get_text (), machine_entry.get_text (),
-														 user_entry.get_text (), ipaddr_entry.get_text (),
+							config.update_configuration (socket_property.curr_value, machine_property.curr_value,
+														 user_property.curr_value, ipaddr_property.curr_value,
 														 button_checkhost.active, button_ssh.active);
 
 							/* this may throws exceptions */
@@ -219,7 +209,7 @@ namespace VDEPN {
 							error_dialog.response.connect ((ev, resp) => {
 									error_dialog.destroy();
 								});
-							//Helper.debug(Helper.TAG_ERROR, e.message);
+
 							error_dialog.run();
 						}
 					}
@@ -227,18 +217,20 @@ namespace VDEPN {
 					/* Deactivate the connection */
 					else {
 						activate_connection.label = "Activate";
-						father.connections_manager.rm_connection (conn_name);
+						father.connections_manager.rm_connection (config.connection_name);
 						button_status = false;
 						notificator.conn_inactive ();
 					}
 
 					/* it's enough, I hate spinners. BURN'EM WITH FIRE */
 					conn_spinner.stop ();
-					remove (conn_spinner);
+					/* remove (conn_spinner); */
 					conn_spinner.destroy ();
 				});
 		}
 
+		/* get the activate/deactivate button checking if the current
+		 * connection is already active */
 		private Button get_button () {
 			File pidfile = File.new_for_path ("/tmp/vdepn-" + config.connection_name + ".pid");
 			if (pidfile.query_exists (null)) {
