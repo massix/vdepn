@@ -30,6 +30,7 @@ namespace VDEPN {
 		private Notification conn_notify_active;
 		private Notification conn_notify_deactivated;
 		private List<ConfigurationPage> pages_list;
+		private AccelGroup accel_group;
 
 		public Manager.VDEConnector connections_manager { get; private set; }
 		public VDEParser conf_holder					{ get; private set; }
@@ -37,7 +38,12 @@ namespace VDEPN {
 
 		/* builds a new Gtk Window with caption as title */
 		public ConfigurationsList (string caption) {
+			accel_group = new AccelGroup ();
 			build_menubar ();
+			accel_group.lock ();
+
+			add_accel_group (accel_group);
+
 			main_vbox = new VBox (false, 2);
 			conf_pages = new Notebook ();
 			pages_list = new List<ConfigurationPage> ();
@@ -87,11 +93,28 @@ namespace VDEPN {
 
 			// file
 			Menu file_menu = new Menu ();
-			MenuItem file_item = new MenuItem.with_label ("File");
-			MenuItem new_conn_item = new MenuItem.with_label ("New connection");
-			MenuItem save_conn_item = new MenuItem.with_label ("Save connection");
-			MenuItem rm_conn_item = new MenuItem.with_label ("Remove connection");
-			MenuItem exit_item = new MenuItem.with_label ("Exit");
+			ImageMenuItem file_item = new ImageMenuItem.with_mnemonic ("_File");
+			ImageMenuItem new_conn_item = new ImageMenuItem.from_stock (Gtk.Stock.NEW, accel_group);
+			ImageMenuItem save_conn_item = new ImageMenuItem.from_stock (Gtk.Stock.SAVE, accel_group);
+			ImageMenuItem rm_conn_item = new ImageMenuItem.from_stock (Gtk.Stock.DELETE, accel_group);
+			ImageMenuItem exit_item = new ImageMenuItem.from_stock (Gtk.Stock.QUIT, accel_group);
+
+			new_conn_item.add_accelerator ("activate", accel_group, (uint) 'n', Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE);
+			save_conn_item.add_accelerator ("activate", accel_group, (uint) 's', Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE);
+			rm_conn_item.add_accelerator ("activate", accel_group, (uint) 'd', Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE);
+			exit_item.add_accelerator ("activate", accel_group, (uint) 'q', Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE);
+
+			file_item.set_accel_group (accel_group);
+			file_item.set_always_show_image (true);
+			new_conn_item.set_always_show_image (true);
+			new_conn_item.set_accel_group (accel_group);
+			save_conn_item.set_always_show_image (true);
+			save_conn_item.set_accel_group (accel_group);
+			rm_conn_item.set_always_show_image (true);
+			rm_conn_item.set_accel_group (accel_group);
+			exit_item.set_always_show_image (true);
+			exit_item.set_accel_group (accel_group);
+
 			file_menu.append (new_conn_item);
 			file_menu.append (save_conn_item);
 			file_menu.append (rm_conn_item);
@@ -189,7 +212,7 @@ namespace VDEPN {
 
 			/* building help menu */
 			Menu help_menu = new Menu ();
-			MenuItem help_item = new MenuItem.with_label ("Help");
+			MenuItem help_item = new MenuItem.with_mnemonic ("_Help");
 			MenuItem about_item = new MenuItem.with_label ("About");
 			help_menu.append (about_item);
 
@@ -229,7 +252,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 			});
 
 			help_item.submenu = help_menu;
-
 			main_menu.append (file_item);
 			main_menu.append (help_item);
 		}
