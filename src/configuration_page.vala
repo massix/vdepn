@@ -22,8 +22,40 @@ using Notify;
 using GLib.Environment;
 
 namespace VDEPN {
+	private class VNotification : Notify.Notification {
+		private string conn_name;
+
+		public VNotification (string conn_name) {
+			/* chain up to the default Notification constructor */
+			GLib.Object (summary: "VDE Private Network Manager",
+						 body: "Body",
+						 icon_name: Helper.ICON_PATH);
+		}
+
+		public void conn_active () {
+			body = "Connection " + conn_name + " is now active";
+			try {
+				show ();
+			}
+			catch (GLib.Error e) {
+				Helper.debug (Helper.TAG_ERROR, "Error while showing notifications: " + e.message);
+			}
+		}
+
+		public void conn_inactive () {
+			body = "Connection " + conn_name + " is now inactive";
+			try {
+				show ();
+			}
+			catch (GLib.Error e) {
+				Helper.debug (Helper.TAG_ERROR, "Error while showing notifications: " + e.message);
+			}
+		}
+	}
+
 	private class ConfigurationPage : Gtk.Table {
 		private ConfigurationsList father;
+		private VNotification notificator;
 
 		public VDEConfiguration config		{ get; private set; }
 		public Table conf_table				{ get; private set; }
@@ -43,8 +75,11 @@ namespace VDEPN {
 			homogeneous = false;
 			row_spacing = 3;
 
+
 			this.config = v;
 			this.father = father;
+
+			notificator = new VNotification (config.connection_name);
 
 			string conn_name = config.connection_name;
 			string conn_machine = config.machine;
@@ -167,6 +202,7 @@ namespace VDEPN {
 							father.connections_manager.new_connection (config);
 							button_status = true;
 							activate_connection.label = "Deactivate";
+							notificator.conn_active ();
 						}
 
 						/* woah.. something bad happened :( */
@@ -194,6 +230,7 @@ namespace VDEPN {
 						activate_connection.label = "Activate";
 						father.connections_manager.rm_connection (conn_name);
 						button_status = false;
+						notificator.conn_inactive ();
 					}
 
 					/* it's enough, I hate spinners. BURN'EM WITH FIRE */

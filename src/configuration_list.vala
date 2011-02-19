@@ -18,7 +18,6 @@
  */
 
 using Gtk;
-using Notify;
 using GLib.Environment;
 
 namespace VDEPN {
@@ -27,8 +26,6 @@ namespace VDEPN {
 		private Notebook conf_pages;
 		private MenuBar main_menu;
 		private string prg_files = get_user_config_dir () + "/vdepn";
-		private Notification conn_notify_active;
-		private Notification conn_notify_deactivated;
 		private List<ConfigurationPage> pages_list;
 		private AccelGroup accel_group;
 
