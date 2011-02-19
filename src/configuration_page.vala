@@ -111,6 +111,7 @@ namespace VDEPN {
 		private HBox checkbuttons_box;
 		private Spinner conn_spinner;
 
+		/* read-only properties */
 		public ConfigurationProperty conn_name_property		{ get; private set; }
 		public ConfigurationProperty machine_property		{ get; private set; }
 		public ConfigurationProperty user_property			{ get; private set; }
@@ -172,6 +173,9 @@ namespace VDEPN {
 			activate_connection.clicked.connect ((ev) => {
 					conn_spinner.start ();
 
+					/* Avoid starting multiple threads accidentally */
+					activate_connection.sensitive = false;
+
 					Thread.create<void> (() => {
 							/* this actually activates the connection */
 							if (button_status == false) {
@@ -219,8 +223,10 @@ namespace VDEPN {
 
 							/* it's enough, I hate spinners. BURN'EM WITH FIRE */
 							conn_spinner.stop ();
-
 						}, false);
+
+					/* Make the button sensible to signals again */
+					activate_connection.sensitive = true;
 				});
 		}
 
