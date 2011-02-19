@@ -29,6 +29,7 @@ namespace VDEPN {
 		private string prg_files = get_user_config_dir () + "/vdepn";
 		private Notification conn_notify_active;
 		private Notification conn_notify_deactivated;
+		private List<ConfigurationPage> pages_list;
 
 		public Manager.VDEConnector connections_manager { get; private set; }
 		public VDEParser conf_holder					{ get; private set; }
@@ -39,6 +40,7 @@ namespace VDEPN {
 			build_menubar ();
 			main_vbox = new VBox (false, 2);
 			conf_pages = new Notebook ();
+			pages_list = new List<ConfigurationPage> ();
 
 			connections_manager = new Manager.VDEConnector ();
 			try {
@@ -69,8 +71,9 @@ namespace VDEPN {
 			conf_list = conf_holder.get_configurations ();
 
 			foreach (VDEConfiguration v in conf_list) {
-				conf_pages.append_page (new ConfigurationPage (v, this),
-										new Label (v.connection_name));
+				ConfigurationPage p = new ConfigurationPage (v, this);
+				pages_list.append (p);
+				conf_pages.append_page (p, new Label (v.connection_name));
 			}
 
 			main_vbox.pack_start (main_menu, false, true, 0);
@@ -96,6 +99,18 @@ namespace VDEPN {
 			file_menu.append (exit_item);
 
 			save_conn_item.activate.connect ((ev) => {
+					int conn_id = conf_pages.get_current_page ();
+					if (conn_id < 0) {
+						Helper.debug (Helper.TAG_ERROR, "No active page");
+						return;
+					}
+					else {
+						ConfigurationPage page = pages_list.nth_data (conn_id);
+						page.config.update_configuration (page.socket_entry.text, page.machine_entry.text,
+														  page.user_entry.text, page.ipaddr_entry.text,
+														  page.button_checkhost.active, page.button_ssh.active);
+						page.config.store_configuration (conf_holder);
+					}
 				});
 
 			rm_conn_item.activate.connect ((ev) => {
@@ -116,6 +131,13 @@ namespace VDEPN {
 									confirm.destroy ();
 								else {
 									VDEConfiguration rem = conf_list.nth_data (conn_id);
+
+									/* remove the configuration page too */
+									foreach (ConfigurationPage page in pages_list) {
+										if (page.config.connection_name == rem.connection_name)
+											pages_list.remove (page);
+									}
+
 									conf_holder.update_file (null, rem, true);
 									conf_list.remove (rem);
 									conf_pages.next_page ();
@@ -148,11 +170,12 @@ namespace VDEPN {
 					new_conf_dialog.response.connect ((ev, resp) => {
 							if (resp == 0) {
 								VDEConfiguration new_conf = new VDEConfiguration.with_defaults (new_conf_entry.text);
+								ConfigurationPage p = new ConfigurationPage (new_conf, this);
 								conf_list.append (new_conf);
 								new_conf.store_configuration (conf_holder);
-								conf_pages.append_page (new ConfigurationPage (new_conf, this),
-														new Label (new_conf.connection_name));
+								conf_pages.append_page (p, new Label (new_conf.connection_name));
 								conf_pages.show_all ();
+								pages_list.append (p);
 								new_conf_dialog.destroy ();
 							}
 							else

@@ -24,8 +24,8 @@ using GLib.Environment;
 namespace VDEPN {
 	private class ConfigurationPage : Gtk.Table {
 		private ConfigurationsList father;
-		private VDEConfiguration config		{ get; private set; }
 
+		public VDEConfiguration config		{ get; private set; }
 		public Table conf_table				{ get; private set; }
 		public Entry conn_name_entry		{ get; private set; }
 		public Entry machine_entry			{ get; private set; }
@@ -39,10 +39,12 @@ namespace VDEPN {
 
 		/* Builds a new Notebook Page */
 		public ConfigurationPage (VDEConfiguration v, ConfigurationsList father) {
+			resize (9, 2);
+			homogeneous = false;
+			row_spacing = 3;
+
 			this.config = v;
 			this.father = father;
-
-			resize(9, 2);
 
 			string conn_name = config.connection_name;
 			string conn_machine = config.machine;
@@ -95,7 +97,6 @@ namespace VDEPN {
 			button_checkhost.active = config.checkhost;
 
 			Button activate_connection = get_button ();
-			Button save_configuration = new Button.with_label ("Save");
 
 			machine_entry.editable = true;
 			machine_entry.set_text (conn_machine);
@@ -130,23 +131,13 @@ namespace VDEPN {
 			attach_defaults (button_ssh, 0, 1, 5, 6);
 			attach_defaults (button_checkhost, 1, 2, 5, 6);
 
-			attach_defaults (save_configuration, 0, 1, 7, 8);
-			attach_defaults (activate_connection, 1, 2, 7, 8);
+			attach_defaults (activate_connection, 0, 2, 8, 9);
 
 			ipaddr_label.xalign = (float) 0;
 			socket_label.xalign = (float) 0;
 			user_label.xalign = (float) 0;
 			machine_label.xalign = (float) 0;
 			conn_name_label.xalign = (float) 0;
-
-			//father.conf_pages.append_page (conf_table, new Label(conn_name));
-
-			save_configuration.clicked.connect ((ev) => {
-					config.update_configuration (socket_entry.text, machine_entry.text,
-											  user_entry.text, ipaddr_entry.text,
-											  button_checkhost.active, button_ssh.active);
-					config.store_configuration (father.conf_holder);
-				});
 
 			/* tries to activate the connection, showing a fancy
 			 * spinner while the Application works in background */
