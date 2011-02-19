@@ -36,16 +36,16 @@ namespace VDEPN {
 
 	protected class VDEConfiguration : GLib.Object {
 		/* Read only properties */
-		public string	connection_name { get; private set; }
-		public string	socket_path { get; private set; }
-		public string	user { get; private set; }
-		public string	machine { get; private set; }
-		public string	password { get; private set; }
-		public string	iface { get; private set; }
-		public string	ip_address { get; private set; }
-		public bool		use_dhcp { get; private set; }
-		public bool		use_keys { get; private set; }
-		public bool		checkhost { get; private set; }
+		public string	connection_name		{ get; private set; }
+		public string	socket_path			{ get; private set; }
+		public string	user				{ get; private set; }
+		public string	machine				{ get; private set; }
+		public string	password			{ get; private set; }
+		public string	iface				{ get; private set; }
+		public string	ip_address			{ get; private set; }
+		public bool		use_dhcp			{ get; private set; }
+		public bool		use_keys			{ get; private set; }
+		public bool		checkhost			{ get; private set; }
 
 		public VDEConfiguration.with_defaults (string conf_name) {
 			connection_name = conf_name;

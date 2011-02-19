@@ -71,6 +71,14 @@ namespace VDEPN.Manager
 			Helper.debug (Helper.TAG_ERROR, "Connection not found in active connections list");
 			return false;
 		}
+
+		public uint count_active_connections () {
+			return active_connections.length ();
+		}
+
+		public VDEConnection get_connection (uint index) {
+			return active_connections.nth_data (index);
+		}
 	}
 
 	public class VDEConnection : GLib.Object {

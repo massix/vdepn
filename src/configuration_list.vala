@@ -260,7 +260,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 			main_menu.append (file_item);
 			main_menu.append (help_item);
 		}
+
+
+		public void switch_page (string conn_id) {
+			foreach (VDEConfiguration v in conf_list) {
+				if (v.connection_name == conn_id) {
+					int index = conf_list.index (v);
+					conf_pages.set_current_page (index);
+				}
+			}
+		}
 	}
+
 
 	// creates a new icon in the system tray, linked to the parent
 	public class TrayIcon : Gtk.StatusIcon {
@@ -269,13 +280,52 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 		public TrayIcon (ConfigurationsList linked) {
 			set_from_file (Helper.ICON_PATH);
+			has_tooltip = false;
 			title = "VDE PN Manager";
-			set_tooltip_text("VDE PN Manager");
 			parent = linked;
+
 			parent_connector = parent.connections_manager;
+
 			activate.connect (() => {
 					parent.visible = !parent.visible;
 				});
+
+			/* Builds a Menu showing currently active connections or
+			   "No active connections" if none are active */
+			popup_menu.connect ((but, acttime) => {
+					Menu inner_menu = new Menu ();
+					MenuItem act_conn = new MenuItem.with_label ("Active Connections");
+					SeparatorMenuItem sep = new SeparatorMenuItem ();
+					sep.show ();
+					act_conn.show ();
+					act_conn.sensitive = false;
+					inner_menu.append (act_conn);
+					inner_menu.append (sep);
+
+					if (parent_connector.count_active_connections () <= 0) {
+						MenuItem no_act_conn = new MenuItem.with_label ("No active Connections");
+						no_act_conn.show ();
+						inner_menu.append (no_act_conn);
+					}
+
+					else {
+						for (int i = 0; i < parent_connector.count_active_connections (); i++) {
+							Manager.VDEConnection temp = parent_connector.get_connection (i);
+							MenuItem conn = new MenuItem.with_label (temp.conn_id);
+							conn.show ();
+							inner_menu.append (conn);
+							conn.activate.connect (() => {
+									if (!parent.visible)
+										parent.visible = true;
+									parent.switch_page (temp.conn_id);
+								});
+						}
+					}
+
+					inner_menu.popup (null, null, null, but, acttime);
+				});
+
+			show ();
 		}
 
 		public void show () {
