@@ -174,8 +174,6 @@ namespace VDEPN {
 			 * spinner while the Application works in background */
 			activate_connection.clicked.connect ((ev) => {
 					Spinner conn_spinner = new Spinner ();
-					string error_message;
-					bool has_error_happened;
 
 					/* the empty line between the checkbuttons and the buttons */
 					conf_table.attach_defaults (conn_spinner, 0, 2, 6, 7);
@@ -197,34 +195,22 @@ namespace VDEPN {
 														   user_entry.get_text (), ipaddr_entry.get_text (),
 														   button_checkhost.active, button_ssh.active);
 
-							/* make the connection trial in background */
-							unowned Thread<string> new_conn_thread = Thread.create<string> (() => {
-									try {
-										connections_manager.new_connection (new_conn);
-										button_status = true;
-										activate_connection.label = "Deactivate";
-										return "";
-									}
-									catch (Manager.ConnectorError e) {
-										Helper.debug (Helper.TAG_ERROR, "Inner thread catch " + e.message);
-										return e.message;
-									}
-								}, true);
+							/* this may throws exceptions */
+							connections_manager.new_connection (new_conn);
+							button_status = true;
+							activate_connection.label = "Deactivate";
 
-							/* this has to be removed asap, as it makes the above thread almost useless */
-							error_message = new_conn_thread.join ();
-
-							if (error_message != "")
-								throw new Manager.ConnectorError.CONNECTION_FAILED (error_message);
-
-							conn_notify_active.update (Config.PACKAGE_NAME, Helper.NOTIFY_ACTIVE +
-													   " (" + new_conn.connection_name + ")",
-													   Helper.ICON_PATH);
 							try {
-								conn_notify_active.show ();
+								conn_notify_active.update(Config.PACKAGE_NAME, Helper.NOTIFY_ACTIVE +
+														  " (" + new_conn.connection_name + ")",
+														  Helper.ICON_PATH);
+								conn_notify_active.show();
 							}
+
 							catch (GLib.Error e) {
+								Helper.debug(Helper.TAG_ERROR, "Error while showing notification");
 							}
+
 						}
 
 						/* woah.. something bad happened :( */
