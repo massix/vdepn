@@ -192,7 +192,7 @@ namespace VDEPN.Manager
 		/* checks the exit status of a simple ssh connection to the
 		 * given host */
 		private bool check_ssh_host () throws GLib.Error {
-			string command = "ssh -o PasswordAuthentication=no -l " + user + " " + machine + " exit";
+			string command = "ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no -l " + user + " " + machine + " exit";
 
 			try {
 				Process.spawn_command_line_sync (command, null, out check_host_stderr, out ex_status);
