@@ -30,6 +30,7 @@ namespace VDEPN {
 			GLib.Object (summary: "VDE Private Network Manager",
 						 body: "Body",
 						 icon_name: Helper.ICON_PATH);
+			this.conn_name = conn_name;
 		}
 
 		public void conn_active () {
