@@ -212,9 +212,14 @@ namespace VDEPN {
 
 			/* building help menu */
 			Menu help_menu = new Menu ();
-			MenuItem help_item = new MenuItem.with_mnemonic ("_Help");
-			MenuItem about_item = new MenuItem.with_label ("About");
+			ImageMenuItem help_item = new ImageMenuItem.with_mnemonic ("_Help");
+			ImageMenuItem about_item = new ImageMenuItem.from_stock (Gtk.Stock.ABOUT, accel_group);
 			help_menu.append (about_item);
+
+			about_item.add_accelerator ("activate", accel_group, (uint) 'h', Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE);
+
+			about_item.set_always_show_image (true);
+			about_item.set_accel_group (accel_group);
 
 			about_item.activate.connect ((ev) => {
 					AboutDialog about = new AboutDialog ();
