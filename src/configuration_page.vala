@@ -116,6 +116,7 @@ namespace VDEPN {
 		public ConfigurationProperty machine_property		{ get; private set; }
 		public ConfigurationProperty user_property			{ get; private set; }
 		public ConfigurationProperty socket_property		{ get; private set; }
+		public ConfigurationProperty remote_socket_property { get; private set; }
 		public ConfigurationProperty ipaddr_property		{ get; private set; }
 		public CheckButton button_ssh		{ get; private set; }
 		public CheckButton button_checkhost { get; private set; }
@@ -142,7 +143,8 @@ namespace VDEPN {
 
 			machine_property = new ConfigurationProperty ("VDE <b>Machine</b>:", config.machine);
 			user_property = new ConfigurationProperty ("VDE <b>User</b>:" , config.user);
-			socket_property = new ConfigurationProperty ("<b>Socket</b> Path:", config.socket_path);
+			socket_property = new ConfigurationProperty ("<b>Local</b> Socket Path:", config.socket_path);
+			remote_socket_property = new ConfigurationProperty ("<b>Remote</b> Socket Path:", config.remote_socket_path);
 			ipaddr_property = new ConfigurationProperty ("TUN/TAP <b>IPv4 Address</b>:", config.ip_address);
 
 			checkbuttons_box = new HBox (true, 2);
@@ -163,6 +165,7 @@ namespace VDEPN {
 			pack_start (machine_property, false, false, 0);
 			pack_start (user_property, false, false, 0);
 			pack_start (socket_property, false, false, 0);
+			pack_start (remote_socket_property, false, false, 0);
 			pack_start (ipaddr_property, false, false, 0);
 			pack_start (checkbuttons_box);
 			pack_start (conn_spinner);
@@ -180,7 +183,8 @@ namespace VDEPN {
 							/* this actually activates the connection */
 							if (button_status == false) {
 								try {
-									config.update_configuration (socket_property.curr_value, machine_property.curr_value,
+									config.update_configuration (socket_property.curr_value, remote_socket_property.curr_value,
+																 machine_property.curr_value,
 																 user_property.curr_value, ipaddr_property.curr_value,
 																 button_checkhost.active, button_ssh.active);
 

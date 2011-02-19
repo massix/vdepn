@@ -38,6 +38,7 @@ namespace VDEPN {
 		/* Read only properties */
 		public string	connection_name		{ get; private set; }
 		public string	socket_path			{ get; private set; }
+		public string	remote_socket_path	{ get; private set; }
 		public string	user				{ get; private set; }
 		public string	machine				{ get; private set; }
 		public string	password			{ get; private set; }
@@ -79,6 +80,9 @@ namespace VDEPN {
 				case "sockpath":
 					socket_path = conf_node->get_content ();
 					break;
+				case "remotesocket":
+					remote_socket_path = conf_node->get_content ();
+					break;
 				case "ipaddress":
 					Xml.Attr *dhcp;
 					dhcp = conf_node->has_prop ("dhcp");
@@ -100,7 +104,6 @@ namespace VDEPN {
 					checkrequired = conf_node->has_prop ("checkrequired");
 					if ((checkrequired != null) && (checkrequired->children->get_content () == "true"))
 						checkhost = true;
-
 					break;
 				case "password":
 					Xml.Attr *required;
@@ -115,7 +118,7 @@ namespace VDEPN {
 
 					}
 					else
-						password = conf_node->get_content();
+						password = conf_node->get_content ();
 
 					break;
 				default:
@@ -136,10 +139,12 @@ namespace VDEPN {
 				Helper.debug (Helper.TAG_WARNING, "configuration with empty password set");
 		}
 
-		public void update_configuration (string new_sock, string new_machine, string new_user,
+		public void update_configuration (string new_sock, string new_remote_socket,
+										  string new_machine, string new_user,
 										  string new_ip_address, bool new_checkhost,
 										  bool new_ssh_keys) {
 			socket_path = new_sock;
+			remote_socket_path = new_remote_socket;
 			machine = new_machine;
 			user = new_user;
 			ip_address = new_ip_address;
@@ -163,6 +168,9 @@ namespace VDEPN {
 			Xml.Node *sock_path_node = new Xml.Node (null, "sockpath");
 			sock_path_node->set_content (socket_path);
 
+			Xml.Node *remote_sock_path_node = new Xml.Node (null, "remotesocket");
+			remote_sock_path_node->set_content (remote_socket_path);
+
 			Xml.Node *ipaddress_node = new Xml.Node (null, "ipaddress");
 			ipaddress_node->set_prop ("dhcp", "false");
 			ipaddress_node->set_content (ip_address);
@@ -179,6 +187,7 @@ namespace VDEPN {
 			password_node->set_prop ("usekeys", "false");
 
 			root_node->add_child (sock_path_node);
+			root_node->add_child (remote_sock_path_node);
 			root_node->add_child (ipaddress_node);
 			root_node->add_child (user_node);
 			root_node->add_child (machine_node);
@@ -255,8 +264,8 @@ namespace VDEPN {
 			}
 
 			foreach (VDEConfiguration v_conf in configurations) {
-				Xml.Node *conf_node = v_conf.store_configuration(null);
-				if (!(conf_node->has_prop("id")->children->content == conf_id))
+				Xml.Node *conf_node = v_conf.store_configuration (null);
+				if (!(conf_node->has_prop ("id")->children->content == conf_id))
 					root_elem->add_child (conf_node);
 			}
 

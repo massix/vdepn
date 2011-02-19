@@ -31,6 +31,7 @@ namespace VDEPN
 			Xml.Node *root_elem = def_conf.new_node(null, "vdemanager");
 			Xml.Node *conn_root_elem = def_conf.new_node(null, "connection");
 			Xml.Node *conn_sock_path = def_conf.new_node(null, "sockpath");
+			Xml.Node *remote_sock_path = def_conf.new_node (null, "remotesocket");
 			Xml.Node *conn_ip_address = def_conf.new_node(null, "ipaddress");
 			Xml.Node *conn_user = def_conf.new_node(null, "user");
 			Xml.Node *conn_machine = def_conf.new_node(null, "machine");
@@ -42,6 +43,8 @@ namespace VDEPN
 			conn_root_elem->set_prop("id", "test-connection");
 			conn_root_elem->add_child(conn_sock_path);
 			conn_sock_path->set_content("/tmp/test-connection");
+			conn_root_elem->add_child (remote_sock_path);
+			remote_sock_path->set_content ("/tmp/vde.ctl");
 			conn_root_elem->add_child(conn_ip_address);
 			conn_ip_address->set_prop("dhcp", "false");
 			conn_ip_address->set_content("10.0.0.1");
