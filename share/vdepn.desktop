@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=VDE PN Manager
+GenericName=VDE Private Network Manager
+Comment=Simple application that simplifies the managing of VDE-based VPNs
+TryExec=vde_manager
+Exec=vde_manager
+Terminal=false
+Type=Application
+Icon=vdepn
+Categories=GTK;Network;
