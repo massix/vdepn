@@ -22,6 +22,7 @@ using Notify;
 using GLib.Environment;
 
 namespace VDEPN {
+	/* Bubble notifications class */
 	private class VNotification : Notify.Notification {
 		private string conn_name;
 
@@ -54,47 +55,41 @@ namespace VDEPN {
 		}
 	}
 
-	private class ConfigurationProperty : Gtk.HBox {
+	/* Common interface used by both the EntryProperty and the TextViewProperty */
+	public interface ConfigurationProperty : GLib.Object {
+		public abstract string get_value ();
+		public abstract void set_editable (bool value);
+		public abstract void set_markup (bool value);
+	}
+
+	/* A simple widget made of an Entry and a Label */
+	private class EntryProperty : Gtk.HBox, ConfigurationProperty {
 		private Entry entry_value;
 		private Label label_value;
-		public string curr_value {
-			get {
-				return entry_value.text;
-			}
 
-			private set {
-				entry_value.text = value;
-			}
+		/* Interface methods */
+		public string get_value () {
+			return entry_value.text;
 		}
 
-		public bool editable {
-			get {
-				return entry_value.editable;
-			}
-
-			set {
-				entry_value.editable = value;
-			}
+		public void set_editable (bool value) {
+			entry_value.editable = value;
 		}
 
-		public bool use_markup {
-			get {
-				return label_value.use_markup;
-			}
-			set {
-				label_value.use_markup = value;
-			}
+		public void set_markup (bool value) {
+			label_value.use_markup = value;
 		}
 
-		public ConfigurationProperty (string label, string start_value) {
+
+		public EntryProperty (string label, string start_value) {
 			GLib.Object (homogeneous: true, spacing: 0);
 
 			entry_value = new Entry ();
 			label_value = new Label (label);
 			label_value.xalign = (float) 0;
-			use_markup = true;
+			label_value.use_markup = true;
 
-			curr_value = start_value;
+			entry_value.text = start_value;
 			entry_value.changed.connect(() => {
 					entry_value.text = entry_value.text.replace (" ", "-");
 				});
@@ -105,19 +100,80 @@ namespace VDEPN {
 		}
 	}
 
-	private class ConfigurationPage : Gtk.VBox {
+	/* A simple widget made of a TextView and a Label */
+	private class TextViewProperty : Gtk.VBox, ConfigurationProperty {
+		private TextView text_view_entry;
+		private Label description_label;
+		private ScrolledWindow container;
+
+		public TextViewProperty (string label) {
+			GLib.Object (homogeneous: false, spacing: 0);
+
+			/* Build up the objects */
+			container = new ScrolledWindow (null, null);
+			text_view_entry = new TextView ();
+			description_label = new Label (label);
+
+			/* Pack them together */
+			pack_start (description_label, false, false, 0);
+			container.add (text_view_entry);
+
+			container.hscrollbar_policy = PolicyType.AUTOMATIC;
+			container.vscrollbar_policy = PolicyType.AUTOMATIC;
+
+			text_view_entry.wrap_mode = Gtk.WrapMode.NONE;
+
+			pack_start (container, true, true, 0);
+
+			show_all ();
+		}
+
+		/* Interface methods */
+		public string get_value () {
+			TextBuffer tb;
+			TextIter iter_start;
+			TextIter iter_end;
+
+			/* Obtain the text buffer */
+			tb = text_view_entry.get_buffer ();
+
+			tb.get_start_iter (out iter_start);
+			tb.get_end_iter (out iter_end);
+
+			return tb.get_text (iter_start, iter_end, false);
+		}
+
+		public void set_editable (bool value) {
+			text_view_entry.editable = value;
+		}
+
+		public void set_markup (bool value) {
+			description_label.use_markup = value;
+		}
+
+	}
+
+	private class ConfigurationPage : Gtk.HPaned {
 		private ConfigurationsList father;
 		private VNotification notificator;
 		private HBox checkbuttons_box;
+		private VBox left_pane;
+		private VBox right_pane;
 		private Spinner conn_spinner;
 
-		/* read-only properties */
+		/* read-only properties (left part of the pane) */
 		public ConfigurationProperty conn_name_property		{ get; private set; }
 		public ConfigurationProperty machine_property		{ get; private set; }
 		public ConfigurationProperty user_property			{ get; private set; }
 		public ConfigurationProperty socket_property		{ get; private set; }
 		public ConfigurationProperty remote_socket_property { get; private set; }
 		public ConfigurationProperty ipaddr_property		{ get; private set; }
+
+		/* advanced properties (right part of the pane) */
+		public ConfigurationProperty machine_port			{ get; private set; }
+		public ConfigurationProperty pre_conn_cmds			{ get; private set; }
+		public ConfigurationProperty post_conn_cmds			{ get; private set; }
+
 		public CheckButton button_ssh		{ get; private set; }
 		public CheckButton button_checkhost { get; private set; }
 
@@ -127,8 +183,11 @@ namespace VDEPN {
 
 		/* Builds a new Notebook Page */
 		public ConfigurationPage (VDEConfiguration v, ConfigurationsList father) {
-			/* chain up to the vbox constructor */
-			GLib.Object (homogeneous: true, spacing: 2);
+			/* chain up to the hpaned constructor */
+			GLib.Object ();
+
+			left_pane = new VBox (true, 0);
+			right_pane = new VBox (false, 0);
 
 			this.config = v;
 			this.father = father;
@@ -138,14 +197,17 @@ namespace VDEPN {
 
 			index = father.conf_list.index (config);
 
-			conn_name_property = new ConfigurationProperty ("Connection <b>name</b>:", config.connection_name);
-			conn_name_property.editable = false;
+			conn_name_property = new EntryProperty ("Connection <b>name</b>:", config.connection_name);
+			conn_name_property.set_editable (false);
 
-			machine_property = new ConfigurationProperty ("VDE <b>Machine</b>:", config.machine);
-			user_property = new ConfigurationProperty ("VDE <b>User</b>:" , config.user);
-			socket_property = new ConfigurationProperty ("<b>Local</b> Socket Path:", config.socket_path);
-			remote_socket_property = new ConfigurationProperty ("<b>Remote</b> Socket Path:", config.remote_socket_path);
-			ipaddr_property = new ConfigurationProperty ("TUN/TAP <b>IPv4 Address</b>:", config.ip_address);
+			machine_property = new EntryProperty ("VDE <b>Machine</b>:", config.machine);
+			user_property = new EntryProperty ("VDE <b>User</b>:" , config.user);
+			socket_property = new EntryProperty ("<b>Local</b> Socket Path:", config.socket_path);
+			remote_socket_property = new EntryProperty ("<b>Remote</b> Socket Path:", config.remote_socket_path);
+			ipaddr_property = new EntryProperty ("TUN/TAP <b>IPv4 Address</b>:", config.ip_address);
+
+			pre_conn_cmds = new TextViewProperty ("Pre-connection commands");
+			post_conn_cmds = new TextViewProperty ("Post-connection commands");
 
 			checkbuttons_box = new HBox (true, 2);
 			button_ssh = new CheckButton.with_label ("Use SSH keys");
@@ -161,20 +223,29 @@ namespace VDEPN {
 
 			Button activate_connection = get_button ();
 
-			pack_start (conn_name_property, false, false, 0);
-			pack_start (machine_property, false, false, 0);
-			pack_start (user_property, false, false, 0);
-			pack_start (socket_property, false, false, 0);
-			pack_start (remote_socket_property, false, false, 0);
-			pack_start (ipaddr_property, false, false, 0);
-			pack_start (checkbuttons_box, false, false, 0);
-			pack_start (activate_connection, false, false, 0);
+			/* left part of the pane */
+			left_pane.pack_start ((Widget) conn_name_property, false, false, 0);
+		 	left_pane.pack_start ((Widget) machine_property, false, false, 0);
+			left_pane.pack_start ((Widget) user_property, false, false, 0);
+			left_pane.pack_start ((Widget) socket_property, false, false, 0);
+			left_pane.pack_start ((Widget) remote_socket_property, false, false, 0);
+			left_pane.pack_start ((Widget) ipaddr_property, false, false, 0);
+			left_pane.pack_start (checkbuttons_box, false, false, 0);
+			left_pane.pack_start (activate_connection, false, false, 0);
+
+			pack1 (left_pane, false, false);
+
+			/* right part of the pane */
+			right_pane.pack_start ((Widget) pre_conn_cmds, true, true, 0);
+			right_pane.pack_start ((Widget) post_conn_cmds, true, true, 0);
+
+			pack2 (right_pane, true, true);
 
 			/* tries to activate the connection, showing a fancy
 			 * spinner while the Application works in background */
 			activate_connection.clicked.connect ((ev) => {
-					remove (activate_connection);
-					pack_start (conn_spinner, true, true, 0);
+					left_pane.remove (activate_connection);
+					left_pane.pack_start (conn_spinner, true, true, 0);
 					show_all ();
 					conn_spinner.start ();
 
@@ -185,9 +256,9 @@ namespace VDEPN {
 							/* this actually activates the connection */
 							if (button_status == false) {
 								try {
-									config.update_configuration (socket_property.curr_value, remote_socket_property.curr_value,
-																 machine_property.curr_value,
-																 user_property.curr_value, ipaddr_property.curr_value,
+									config.update_configuration (socket_property.get_value (), remote_socket_property.get_value (),
+																 machine_property.get_value (),
+																 user_property.get_value (), ipaddr_property.get_value (),
 																 button_checkhost.active, button_ssh.active);
 
 									/* this may throws exceptions */
@@ -229,8 +300,8 @@ namespace VDEPN {
 
 							/* it's enough, I hate spinners. BURN'EM WITH FIRE */
 							conn_spinner.stop ();
-							remove (conn_spinner);
-							pack_start (activate_connection, true, true, 0);
+							left_pane.remove (conn_spinner);
+							left_pane.pack_start (activate_connection, true, true, 0);
 							show_all ();
 							return null;
 						}, false);
@@ -238,6 +309,8 @@ namespace VDEPN {
 					/* Make the button sensible to signals again */
 					activate_connection.sensitive = true;
 				});
+
+			show_all ();
 		}
 
 		/* get the activate/deactivate button checking if the current
