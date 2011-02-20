@@ -154,7 +154,6 @@ namespace VDEPN.Manager
 					"= " + vde_plug_cmd + " " + configuration.socket_path + " &\n" +
 					ifconfig_cmd + " " + iface + " " + configuration.ip_address + " up\n";
 
-				Helper.debug (Helper.TAG_DEBUG, script);
 				GLib.FileUtils.set_contents (temp_file, script, -1);
 				GLib.FileUtils.chmod (temp_file, 0700);
 				string command = pkexec_cmd + " " + temp_file;
