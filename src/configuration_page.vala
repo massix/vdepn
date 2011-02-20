@@ -87,7 +87,7 @@ namespace VDEPN {
 		}
 
 		public ConfigurationProperty (string label, string start_value) {
-			GLib.Object (homogeneous: true, spacing: 10);
+			GLib.Object (homogeneous: true, spacing: 0);
 
 			entry_value = new Entry ();
 			label_value = new Label (label);
@@ -100,7 +100,7 @@ namespace VDEPN {
 				});
 
 			pack_start (label_value, true, true, 0);
-			pack_start (entry_value, true, true, 16);
+			pack_start (entry_value, true, true, 0);
 			show_all ();
 		}
 	}
