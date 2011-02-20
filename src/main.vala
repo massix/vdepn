@@ -20,10 +20,8 @@
 using GLib.Environment;
 using Xml;
 
-namespace VDEPN
-{
-	public class Application : GLib.Object
-	{
+namespace VDEPN {
+	public class Application : GLib.Object {
 		private static Doc default_configuration() {
 			Doc def_conf = new Doc();
 
@@ -38,63 +36,69 @@ namespace VDEPN
 			Xml.Node *conn_password = def_conf.new_node(null, "password");
 
 			// Creates the DOM
-			def_conf.set_root_element(root_elem);
-			root_elem->add_child(conn_root_elem);
-			conn_root_elem->set_prop("id", "test-connection");
-			conn_root_elem->add_child(conn_sock_path);
-			conn_sock_path->set_content("/tmp/test-connection");
+			def_conf.set_root_element (root_elem);
+
+			root_elem->add_child (conn_root_elem);
+			conn_root_elem->set_prop ("id", "test-connection");
+
+			conn_root_elem->add_child (conn_sock_path);
+			conn_sock_path->set_content ("/tmp/test-connection");
+
 			conn_root_elem->add_child (remote_sock_path);
 			remote_sock_path->set_content ("/tmp/vde.ctl");
-			conn_root_elem->add_child(conn_ip_address);
-			conn_ip_address->set_prop("dhcp", "false");
-			conn_ip_address->set_content("10.0.0.1");
-			conn_root_elem->add_child(conn_user);
-			conn_user->set_content("vde0");
-			conn_root_elem->add_child(conn_machine);
-			conn_machine->set_content("vde2.v2.cs.unibo.it");
-			conn_machine->set_prop("checkhost", "true");
-			conn_root_elem->add_child(conn_password);
-			conn_password->set_prop("required", "false");
-			conn_password->set_prop("usekeys", "false");
+
+			conn_root_elem->add_child (conn_ip_address);
+			conn_ip_address->set_prop ("dhcp", "false");
+			conn_ip_address->set_content ("10.0.0.1");
+
+			conn_root_elem->add_child (conn_user);
+			conn_user->set_content ("vde0");
+
+			conn_root_elem->add_child (conn_machine);
+			conn_machine->set_content ("vde2.v2.cs.unibo.it");
+			conn_machine->set_prop ("checkhost", "true");
+
+			conn_root_elem->add_child (conn_password);
+			conn_password->set_prop ("required", "false");
+			conn_password->set_prop ("usekeys", "false");
 
 			return def_conf;
 		}
 
 
-		public static void main(string[] args)
-		{
-			File prog_dir = File.new_for_path(Environment.get_user_config_dir() + Helper.PROG_DATA_DIR);
-			File prog_xml = File.new_for_path(Environment.get_user_config_dir() + Helper.XML_FILE);
+		public static void main (string[] args) {
+			File prog_dir = File.new_for_path (Environment.get_user_config_dir () + Helper.PROG_DATA_DIR);
+			File prog_xml = File.new_for_path (Environment.get_user_config_dir () + Helper.XML_FILE);
 
 			// Configuration dir exists..
-			if (prog_dir.query_exists(null)) {
-				if (!(prog_xml.query_exists(null))) {
-					Doc conf = default_configuration();
-					conf.save_file(get_user_config_dir() + Helper.XML_FILE);
+			if (prog_dir.query_exists (null)) {
+				if (!(prog_xml.query_exists (null))) {
+					Doc conf = default_configuration ();
+					conf.save_file (get_user_config_dir () + Helper.XML_FILE);
 				}
 			}
 
 			// Configuration dir doesn't exist
 			else {
-				DirUtils.create(get_user_config_dir() + Helper.PROG_DATA_DIR, 0775);
-				Doc conf = default_configuration();
-				conf.save_file(get_user_config_dir() + Helper.XML_FILE);
+				DirUtils.create (get_user_config_dir () + Helper.PROG_DATA_DIR, 0775);
+				Doc conf = default_configuration ();
+				conf.save_file (get_user_config_dir () + Helper.XML_FILE);
 			}
 
-			Gtk.init(ref args);
+			Gtk.init (ref args);
 			Gdk.threads_init ();
 
-			set_application_name("VDE PN Manager");
-			set_prgname("VDE PN Manager");
-			Notify.init("VDE PN Manager");
-			ConfigurationsList mainWindow = new ConfigurationsList("VDE PN Manager");
-			TrayIcon tray = new TrayIcon(mainWindow);
-			tray.show();
+			set_application_name ("VDE PN Manager");
+			set_prgname ("VDE PN Manager");
+			Notify.init ("VDE PN Manager");
+			ConfigurationsList mainWindow = new ConfigurationsList ("VDE PN Manager");
+			TrayIcon tray = new TrayIcon (mainWindow);
+			tray.show ();
 
 			Gdk.threads_enter ();
-			Gtk.main();
+			Gtk.main ();
 			Gdk.threads_leave ();
-			Notify.uninit();
+			Notify.uninit ();
 		}
 	}
 }
