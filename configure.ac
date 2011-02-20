@@ -1,4 +1,4 @@
-AC_INIT([VDE PN Manager], [0.1.4], [gengarel@cs.unibo.it], [vde_manager])
+AC_INIT([VDE PN Manager], [0.2.0], [gengarel@cs.unibo.it], [vde_manager])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AM_MAINTAINER_MODE
