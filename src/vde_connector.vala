@@ -145,12 +145,16 @@ namespace VDEPN.Manager
 				}
 
 				string iface = "vdepn-" + conn_id;
+				string remote_vde_plug_cmd = "vde_plug";
+				if (configuration.remote_socket_path.chomp () != "")
+					remote_vde_plug_cmd += " " + configuration.remote_socket_path.chomp ();
+
 
 				script = "#!/bin/sh\n\n" +
 					vde_switch_cmd + " -d -t " + iface + " -s " + configuration.socket_path + " || (echo VDEPNError && exit 255)\n" +
 					pgrep_cmd + " -n vde_switch > /tmp/vdepn-" + conn_id + ".pid\n" +
 					dpipe_cmd + " ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no " + configuration.user + "@"
-					+ configuration.machine + " \"vde_plug " + configuration.remote_socket_path + "\" " +
+					+ configuration.machine + " \"" + remote_vde_plug_cmd + "\" " +
 					"= " + vde_plug_cmd + " " + configuration.socket_path + " &\n" +
 					ifconfig_cmd + " " + iface + " " + configuration.ip_address + " up\n";
 
