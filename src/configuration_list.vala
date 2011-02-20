@@ -198,7 +198,9 @@ namespace VDEPN {
 					new_conf_dialog.run ();
 				});
 
-			exit_item.activate.connect ((ev) => { Gtk.main_quit (); });
+			exit_item.activate.connect ((ev) => {
+					quit_application ();
+				});
 			file_item.submenu = file_menu;
 
 			/* building help menu */
@@ -243,6 +245,29 @@ namespace VDEPN {
 				}
 			}
 		}
+
+		/* If there are active connections, show a dialog warning the user */
+		public void quit_application () {
+			if (connections_manager.count_active_connections () > 0) {
+				Dialog confirm = new Dialog.with_buttons ("Active Connections", this, DialogFlags.MODAL);
+				confirm.vbox.add (new Label ("There are active connections!"));
+				confirm.add_button ("Quit anyway", 0);
+				confirm.add_button ("Cancel", 1);
+				confirm.vbox.show_all ();
+				confirm.close.connect ((ev) => { confirm.destroy (); });
+				confirm.response.connect ((ev, resp) => {
+						if (resp == 1)
+							confirm.destroy ();
+						else {
+							Gtk.main_quit ();
+						}
+					});
+
+				confirm.run ();
+			}
+			else
+				Gtk.main_quit ();
+		}
 	}
 
 
@@ -268,12 +293,18 @@ namespace VDEPN {
 			popup_menu.connect ((but, acttime) => {
 					Menu inner_menu = new Menu ();
 					MenuItem act_conn = new MenuItem.with_label ("Active Connections");
+					MenuItem quit_item = new MenuItem.with_label ("Quit VDE PN Manager");
 					SeparatorMenuItem sep = new SeparatorMenuItem ();
 					sep.show ();
 					act_conn.show ();
+					quit_item.show ();
 					act_conn.sensitive = false;
 					inner_menu.append (act_conn);
 					inner_menu.append (sep);
+
+					quit_item.activate.connect (() => {
+							linked.quit_application ();
+						});
 
 					if (parent_connector.count_active_connections () <= 0) {
 						MenuItem no_act_conn = new MenuItem.with_label ("No active Connections");
@@ -297,6 +328,8 @@ namespace VDEPN {
 						}
 					}
 
+					inner_menu.append (sep);
+					inner_menu.append (quit_item);
 					inner_menu.popup (null, null, null, but, acttime);
 				});
 
@@ -310,5 +343,6 @@ namespace VDEPN {
 		public void hide () {
 			visible = false;
 		}
+
 	}
 }
