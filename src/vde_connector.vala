@@ -51,9 +51,7 @@ namespace VDEPN.Manager
 				}
 			}
 
-			VDEConnection new_one = new VDEConnection.with_path (conf.socket_path, conf.connection_name,
-																 conf.user, conf.machine,
-																 conf.ip_address, conf.checkhost);
+			VDEConnection new_one = new VDEConnection.with_path (conf);
 			active_connections.append (new_one);
 			return true;
 		}
@@ -82,23 +80,21 @@ namespace VDEPN.Manager
 	}
 
 	public class VDEConnection : GLib.Object {
+		private VDEConfiguration configuration;
 		public string conn_id { get; private set; }
-		private string vde_switch_cmd;
-		private string vde_switch_path;
-		private string vde_plug_cmd;
-		private string pgrep_cmd;
-		private string pkexec_cmd;
-		private string dpipe_cmd;
-		private string ifconfig_cmd;
-		private string iface;
-		private string ip_addr;
-		private string user;
-		private string machine;
-		private int vde_switch_pid;
 
 		/* used while checking ssh host */
 		private string check_host_stderr;
 		private int ex_status;
+
+		/* used internally */
+		int vde_switch_pid;
+		string vde_switch_cmd;
+		string vde_plug_cmd;
+		string dpipe_cmd;
+		string pkexec_cmd;
+		string pgrep_cmd;
+		string ifconfig_cmd;
 
 		public VDEConnection.from_pid_file(string conn_id) {
 			try {
@@ -114,13 +110,9 @@ namespace VDEPN.Manager
 
 		/* creates a new connection at the given arguments, throwing
 		 * an exception if it fails for some reason */
-		public VDEConnection.with_path (string path, string conn_id, string user,
-										string machine, string ipaddr, bool checkhost) throws ConnectorError {
-
-			vde_switch_path = path;
-			this.user = user;
-			this.machine = machine;
-			ip_addr = ipaddr;
+		public VDEConnection.with_path (VDEConfiguration conf) throws ConnectorError {
+			configuration = conf;
+			conn_id = conf.connection_name;
 
 			try {
 				string script;
@@ -147,23 +139,22 @@ namespace VDEPN.Manager
 					throw new ConnectorError.COMMAND_NOT_FOUND ("ifconfig not found, can't set up interface");
 
 				/* check wether the SSH host accepts us */
-				if (checkhost && check_ssh_host ()) {
+				if (configuration.checkhost && check_ssh_host ()) {
 					if (ex_status > 0 || ex_status < 0)
 						throw new ConnectorError.CONNECTION_FAILED (check_host_stderr);
 				}
 
-				vde_switch_path = path;
-				this.conn_id = conn_id;
-				this.ip_addr = ipaddr;
-				iface = "vdepn-" + conn_id;
+				string iface = "vdepn-" + conn_id;
 
 				script = "#!/bin/sh\n\n" +
-					vde_switch_cmd + " -d -t " + iface + " -s " + path + " || (echo VDEPNError && exit 255)\n" +
+					vde_switch_cmd + " -d -t " + iface + " -s " + configuration.socket_path + " || (echo VDEPNError && exit 255)\n" +
 					pgrep_cmd + " -n vde_switch > /tmp/vdepn-" + conn_id + ".pid\n" +
-					dpipe_cmd + " ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no " + user + "@" + machine + " vde_plug " +
-					"= " + vde_plug_cmd + " " + path + " &\n" +
-					ifconfig_cmd + " " + iface + " " + ipaddr + " up\n";
+					dpipe_cmd + " ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no " + configuration.user + "@"
+					+ configuration.machine + " \"vde_plug " + configuration.remote_socket_path + "\" " +
+					"= " + vde_plug_cmd + " " + configuration.socket_path + " &\n" +
+					ifconfig_cmd + " " + iface + " " + configuration.ip_address + " up\n";
 
+				Helper.debug (Helper.TAG_DEBUG, script);
 				GLib.FileUtils.set_contents (temp_file, script, -1);
 				GLib.FileUtils.chmod (temp_file, 0700);
 				string command = pkexec_cmd + " " + temp_file;
@@ -192,7 +183,8 @@ namespace VDEPN.Manager
 		/* checks the exit status of a simple ssh connection to the
 		 * given host */
 		private bool check_ssh_host () throws GLib.Error {
-			string command = "ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no -l " + user + " " + machine + " exit";
+			string command = "ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no -l " +
+							 configuration.user + " " + configuration.machine + " exit";
 
 			try {
 				Process.spawn_command_line_sync (command, null, out check_host_stderr, out ex_status);
@@ -258,6 +250,7 @@ namespace VDEPN.Manager
 				script = "#!/bin/sh\n\n";
 				script += "kill -9 " + vde_switch_pid.to_string () + "\n";
 				script += "rm -f /tmp/vdepn-" + conn_id + ".pid\n";
+				script += "rm -rf " + configuration.socket_path + "\n";
 
 				GLib.FileUtils.set_contents (temp_file, script, -1);
 
