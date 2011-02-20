@@ -168,12 +168,14 @@ namespace VDEPN {
 			pack_start (remote_socket_property, false, false, 0);
 			pack_start (ipaddr_property, false, false, 0);
 			pack_start (checkbuttons_box, false, false, 0);
-			pack_start (conn_spinner, false, false, 0);
 			pack_start (activate_connection, false, false, 0);
 
 			/* tries to activate the connection, showing a fancy
 			 * spinner while the Application works in background */
 			activate_connection.clicked.connect ((ev) => {
+					remove (activate_connection);
+					pack_start (conn_spinner, true, true, 0);
+					show_all ();
 					conn_spinner.start ();
 
 					/* Avoid starting multiple threads accidentally */
@@ -227,6 +229,9 @@ namespace VDEPN {
 
 							/* it's enough, I hate spinners. BURN'EM WITH FIRE */
 							conn_spinner.stop ();
+							remove (conn_spinner);
+							pack_start (activate_connection, true, true, 0);
+							show_all ();
 							return null;
 						}, false);
 
