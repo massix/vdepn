@@ -50,7 +50,8 @@ namespace VDEPN {
 
 		public VDEConfiguration.with_defaults (string conf_name) {
 			connection_name = conf_name;
-			socket_path = "/tmp/change-me";
+			socket_path = "/tmp/vde.ctl";
+			remote_socket_path = "/tmp/vde.ctl";
 			user = "change-me";
 			machine = "change-me";
 			password = "change-me";
