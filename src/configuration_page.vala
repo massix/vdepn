@@ -167,9 +167,9 @@ namespace VDEPN {
 			pack_start (socket_property, false, false, 0);
 			pack_start (remote_socket_property, false, false, 0);
 			pack_start (ipaddr_property, false, false, 0);
-			pack_start (checkbuttons_box);
-			pack_start (conn_spinner);
-			pack_start (activate_connection);
+			pack_start (checkbuttons_box, false, false, 0);
+			pack_start (conn_spinner, false, false, 0);
+			pack_start (activate_connection, false, false, 0);
 
 			/* tries to activate the connection, showing a fancy
 			 * spinner while the Application works in background */
@@ -179,7 +179,7 @@ namespace VDEPN {
 					/* Avoid starting multiple threads accidentally */
 					activate_connection.sensitive = false;
 
-					Thread.create<void> (() => {
+					Thread.create<void*> (() => {
 							/* this actually activates the connection */
 							if (button_status == false) {
 								try {
@@ -227,6 +227,7 @@ namespace VDEPN {
 
 							/* it's enough, I hate spinners. BURN'EM WITH FIRE */
 							conn_spinner.stop ();
+							return null;
 						}, false);
 
 					/* Make the button sensible to signals again */

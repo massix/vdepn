@@ -89,10 +89,10 @@ namespace VDEPN {
 			// file
 			Menu file_menu = new Menu ();
 			ImageMenuItem file_item = new ImageMenuItem.with_mnemonic ("_File");
-			ImageMenuItem new_conn_item = new ImageMenuItem.from_stock (Gtk.Stock.NEW, accel_group);
-			ImageMenuItem save_conn_item = new ImageMenuItem.from_stock (Gtk.Stock.SAVE, accel_group);
-			ImageMenuItem rm_conn_item = new ImageMenuItem.from_stock (Gtk.Stock.DELETE, accel_group);
-			ImageMenuItem exit_item = new ImageMenuItem.from_stock (Gtk.Stock.QUIT, accel_group);
+			ImageMenuItem new_conn_item = new ImageMenuItem.from_stock (Gtk.STOCK_NEW, accel_group);
+			ImageMenuItem save_conn_item = new ImageMenuItem.from_stock (Gtk.STOCK_SAVE, accel_group);
+			ImageMenuItem rm_conn_item = new ImageMenuItem.from_stock (Gtk.STOCK_DELETE, accel_group);
+			ImageMenuItem exit_item = new ImageMenuItem.from_stock (Gtk.STOCK_QUIT, accel_group);
 
 			new_conn_item.add_accelerator ("activate", accel_group, (uint) 'n', Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE);
 			save_conn_item.add_accelerator ("activate", accel_group, (uint) 's', Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE);
@@ -206,7 +206,7 @@ namespace VDEPN {
 			/* building help menu */
 			Menu help_menu = new Menu ();
 			ImageMenuItem help_item = new ImageMenuItem.with_mnemonic ("_Help");
-			ImageMenuItem about_item = new ImageMenuItem.from_stock (Gtk.Stock.ABOUT, accel_group);
+			ImageMenuItem about_item = new ImageMenuItem.from_stock (Gtk.STOCK_ABOUT, accel_group);
 			help_menu.append (about_item);
 
 			about_item.add_accelerator ("activate", accel_group, (uint) 'h', Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE);
@@ -277,6 +277,8 @@ namespace VDEPN {
 		private Manager.VDEConnector parent_connector;
 
 		public TrayIcon (ConfigurationsList linked) {
+			/* Chain up to the default constructor */
+			GLib.Object ();
 			set_from_file (Helper.ICON_PATH);
 			has_tooltip = false;
 			title = "VDE PN Manager";
