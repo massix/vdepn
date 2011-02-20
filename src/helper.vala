@@ -30,6 +30,7 @@ namespace VDEPN {
 		public const string ICON_PATH = Config.PKGDATADIR + "/share/icons/hicolor/scalable/apps/vdepn.svg";
 		public const string LOGO_PATH = Config.PKGDATADIR + "/share/icons/hicolor/scalable/apps/vdepn_big.svg";
 		public const string XML_FILE = PROG_DATA_DIR + "/connections.xml";
+		public const string SSH_ARGS = "-o PasswordAuthentication=no -o StrictHostKeyChecking=no";
 		public const string LICENSE = """VDE PN Manager -- VDE Private Network Manager
 Copyright (C) 2011 - Massimo Gengarelli <gengarel@cs.unibo.it>
 

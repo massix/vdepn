@@ -24,6 +24,8 @@ namespace VDEPN.Manager
 		CONNECTION_FAILED
 	}
 
+	/* Main class, keeps track of all the active connections, creating
+	 * and destroying them if necessary */
 	public class VDEConnector : GLib.Object {
 		private List<VDEConnection> active_connections;
 
@@ -31,6 +33,7 @@ namespace VDEPN.Manager
 			active_connections = new List<VDEConnection> ();
 		}
 
+		/* Builds up a new connection using an existing PID file */
 		public bool new_connection_from_pid (VDEConfiguration conf) {
 			foreach (VDEConnection c in active_connections) {
 				if (c.conn_id == conf.connection_name) {
@@ -43,6 +46,7 @@ namespace VDEPN.Manager
 			return true;
 		}
 
+		/* Builds up a new connection starting with an existing configuration */
 		public bool new_connection (VDEConfiguration conf) throws ConnectorError {
 			foreach (VDEConnection c in active_connections) {
 				if (c.conn_id == conf.connection_name) {
@@ -56,6 +60,7 @@ namespace VDEPN.Manager
 			return true;
 		}
 
+		/* Removes an existing connection */
 		public bool rm_connection (string id) {
 			foreach (VDEConnection c in active_connections) {
 				if (c.conn_id == id) {
@@ -70,15 +75,20 @@ namespace VDEPN.Manager
 			return false;
 		}
 
+		/* Returns the number of currently active connections */
 		public uint count_active_connections () {
 			return active_connections.length ();
 		}
 
+		/* Get the connection identified by its position into the list */
 		public VDEConnection get_connection (uint index) {
 			return active_connections.nth_data (index);
 		}
 	}
 
+	/* This is the class which executes the scripts used to connect,
+	 * every VDEConnection keeps track of its name and its PID file
+	 * (if everything went fine) */
 	public class VDEConnection : GLib.Object {
 		private VDEConfiguration configuration;
 		public string conn_id { get; private set; }
@@ -88,14 +98,19 @@ namespace VDEPN.Manager
 		private int ex_status;
 
 		/* used internally */
-		int vde_switch_pid;
-		string vde_switch_cmd;
-		string vde_plug_cmd;
-		string dpipe_cmd;
-		string pkexec_cmd;
-		string pgrep_cmd;
-		string ifconfig_cmd;
+		private int vde_switch_pid;
+		private string vde_switch_cmd;
+		private string vde_plug2tap_cmd;
+		private string vde_plug_cmd;
+		private string dpipe_cmd;
+		private string pkexec_cmd;
+		private string pgrep_cmd;
+		private string ifconfig_cmd;
 
+		/* The connection was already active, just take out the PID
+		 * file and the socket location
+		 * FIXME: get the socket location somehow
+		 */
 		public VDEConnection.from_pid_file(string conn_id) {
 			try {
 				string pidtmp;
@@ -108,14 +123,15 @@ namespace VDEPN.Manager
 			}
 		}
 
-		/* creates a new connection at the given arguments, throwing
-		 * an exception if it fails for some reason */
+		/* creates a new connection with the given configuration,
+		 * throwing an exception if it fails for some reason */
 		public VDEConnection.with_path (VDEConfiguration conf) throws ConnectorError {
 			configuration = conf;
 			conn_id = conf.connection_name;
 
 			try {
-				string script;
+				string user_script;
+				string root_script;
 				string temp_file;
 				string result;
 
@@ -126,7 +142,8 @@ namespace VDEPN.Manager
 
 				if ((vde_switch_cmd == null) ||
 					(vde_plug_cmd == null) ||
-					(dpipe_cmd == null))
+					(dpipe_cmd == null) ||
+					(vde_plug2tap_cmd == null))
 					throw new ConnectorError.COMMAND_NOT_FOUND ("VDE not fully installed");
 
 				if (pkexec_cmd == null)
@@ -144,33 +161,74 @@ namespace VDEPN.Manager
 						throw new ConnectorError.CONNECTION_FAILED (check_host_stderr);
 				}
 
-				string iface = "vdepn-" + conn_id;
+				/* Build up the two vde_plug cmds (local and remote) */
 				string remote_vde_plug_cmd = "vde_plug";
 				if (configuration.remote_socket_path.chomp () != "")
 					remote_vde_plug_cmd += " " + configuration.remote_socket_path.chomp ();
 
+				string local_vde_plug_cmd = vde_plug_cmd + " " + configuration.socket_path;
 
-				script = "#!/bin/sh\n\n" +
-					vde_switch_cmd + " -d -t " + iface + " -s " + configuration.socket_path + " || (echo VDEPNError && exit 255)\n" +
-					pgrep_cmd + " -n vde_switch > /tmp/vdepn-" + conn_id + ".pid\n" +
-					dpipe_cmd + " ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no " + configuration.user + "@"
-					+ configuration.machine + " \"" + remote_vde_plug_cmd + "\" " +
-					"= " + vde_plug_cmd + " " + configuration.socket_path + " &\n" +
-					ifconfig_cmd + " " + iface + " " + configuration.ip_address + " up\n";
+				/* User part of the script */
+				user_script = "#!/bin/sh\n\n";
 
-				GLib.FileUtils.set_contents (temp_file, script, -1);
+				/* vde_switch creation */
+				user_script += vde_switch_cmd + " -d -s " + configuration.socket_path + " || (echo VDESWITCHERROR && exit 255)\n";
+
+				/* vde_switch pid acquiring */
+				user_script += pgrep_cmd + " -n vde_switch > /tmp/vdepn-" + configuration.connection_name + ".pid\n";
+
+				/* dpipe ssh connection (ssh args user@machine "vde_plug remote_sock_path" = vde_plug local_sock_path */
+				user_script += dpipe_cmd + " ssh " + Helper.SSH_ARGS + " " + configuration.user + "@" + configuration.machine + " ";
+				user_script += "\"" + remote_vde_plug_cmd + "\" ";
+				user_script += "= " + local_vde_plug_cmd + " &\n";
+
+				/* sleep 5 seconds after the connection to see if it fails or not */
+				user_script += "sleep 5\n\n";
+
+				/* vde_plug pid acquiring (or script failure) */
+				user_script += pgrep_cmd + " -fn \"" +  local_vde_plug_cmd + "\" > /dev/null || echo VDEPLUGERROR";
+
+
+				/* Privileged (root) part of the script */
+				root_script = "#!/bin/sh\n\n";
+
+				/* vde_plug2tap */
+				root_script += vde_plug2tap_cmd + " -s " + configuration.socket_path + " " + configuration.connection_name + " &\n";
+
+				/* ifconfig up */
+				root_script += ifconfig_cmd + " " + configuration.connection_name + " " + configuration.ip_address + " up\n";
+
+
+				/* Execute user script */
+				GLib.FileUtils.set_contents (temp_file, user_script, -1);
 				GLib.FileUtils.chmod (temp_file, 0700);
-				string command = pkexec_cmd + " " + temp_file;
-				Process.spawn_command_line_sync (command, out result, null, null);
+				Process.spawn_command_line_sync (temp_file, out result, null, null);
 
-				if (result != "")
-					throw new ConnectorError.CONNECTION_FAILED ("Failed to activate connection");
-
-
-				GLib.FileUtils.unlink (temp_file);
+				/* Grab the vde_switch PID */
 				string pidtmp;
-				GLib.FileUtils.get_contents ("/tmp/vdepn-" + conn_id + ".pid", out pidtmp, null);
+				GLib.FileUtils.get_contents ("/tmp/vdepn-" + configuration.connection_name + ".pid", out pidtmp, null);
 				vde_switch_pid = pidtmp.to_int ();
+
+				if (result.chomp () == "VDESWITCHERROR") {
+					GLib.FileUtils.remove (temp_file);
+					throw new ConnectorError.CONNECTION_FAILED ("Failure while creating the local switch");
+				}
+
+				/* Clean the filesystem and return an error */
+				else if (result.chomp () == "VDEPLUGERROR") {
+					destroy_connection ();
+					GLib.FileUtils.remove (temp_file);
+					throw new ConnectorError.CONNECTION_FAILED ("Failure, remote socket closed connection");
+				}
+
+				else {
+					/* Everything went fine: execute root script */
+					GLib.FileUtils.set_contents (temp_file, root_script, -1);
+					GLib.FileUtils.chmod (temp_file, 0700);
+					Process.spawn_command_line_sync (pkexec_cmd + " " + temp_file, null, null, null);
+				}
+
+				GLib.FileUtils.remove (temp_file);
 			}
 
 			/* throw the exception to the window who raised it so that
@@ -199,7 +257,8 @@ namespace VDEPN.Manager
 			}
 		}
 
-		/* get the paths for the command i'll be using into the generated script */
+		/* get the paths for the command that will be used into the
+		 * generated script */
 		private void get_paths () {
 			string command;
 			string cmd_result;
@@ -215,6 +274,11 @@ namespace VDEPN.Manager
 				Process.spawn_command_line_sync (command, out cmd_result, null, null);
 				tmp_split = cmd_result.split (" ", 0);
 				vde_plug_cmd = tmp_split[1].chomp ();
+
+				command = "whereis vde_plug2tap";
+				Process.spawn_command_line_sync (command, out cmd_result, null, null);
+				tmp_split = cmd_result.split (" ", 0);
+				vde_plug2tap_cmd = tmp_split[1].chomp ();
 
 				command = "whereis dpipe";
 				Process.spawn_command_line_sync (command, out cmd_result, null, null);
@@ -242,16 +306,22 @@ namespace VDEPN.Manager
 			}
 		}
 
+		/* Destroy an existing connection, cleaning up the filesystem */
 		public bool destroy_connection () {
 			try {
 				string script;
 				string temp_file;
-				get_paths ();
 
 				GLib.FileUtils.open_tmp ("kill-vdepn-XXXXXX.sh", out temp_file);
 
 				script = "#!/bin/sh\n\n";
+				/* Killing the vde_switch brings down every other process */
 				script += "kill -9 " + vde_switch_pid.to_string () + "\n";
+
+				/* Wait for the automatic cleaning to finish */
+				script += "sleep 3\n";
+
+				/* Remove PID file and socket */
 				script += "rm -f /tmp/vdepn-" + conn_id + ".pid\n";
 				script += "rm -rf " + configuration.socket_path + "\n";
 
@@ -259,9 +329,9 @@ namespace VDEPN.Manager
 
 				GLib.FileUtils.chmod (temp_file, 0700);
 
-				Process.spawn_command_line_sync (pkexec_cmd + " " + temp_file, null, null, null);
+				Process.spawn_command_line_sync (temp_file, null, null, null);
 
-				GLib.FileUtils.unlink (temp_file);
+				GLib.FileUtils.remove (temp_file);
 
 				return true;
 			}
