@@ -153,8 +153,8 @@ namespace VDEPN {
 
 			conn_spinner = new Spinner ();
 
-			checkbuttons_box.pack_start (button_ssh);
-			checkbuttons_box.pack_start (button_checkhost);
+			checkbuttons_box.pack_start (button_ssh, true, true, 0);
+			checkbuttons_box.pack_start (button_checkhost, true, true, 0);
 
 			button_ssh.active = config.use_keys;
 			button_checkhost.active = config.checkhost;
