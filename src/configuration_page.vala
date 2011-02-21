@@ -106,13 +106,18 @@ namespace VDEPN {
 		private Label description_label;
 		private ScrolledWindow container;
 
-		public TextViewProperty (string label) {
+		public TextViewProperty (string label, string initial_value) {
 			GLib.Object (homogeneous: false, spacing: 0);
 
 			/* Build up the objects */
 			container = new ScrolledWindow (null, null);
 			text_view_entry = new TextView ();
+			TextBuffer tb = text_view_entry.get_buffer ();
+			tb.set_text (initial_value, initial_value.length);
+
+			text_view_entry.set_buffer (tb);
 			description_label = new Label (label);
+			description_label.use_markup = true;
 
 			/* Pack them together */
 			pack_start (description_label, false, false, 0);
@@ -206,8 +211,8 @@ namespace VDEPN {
 			remote_socket_property = new EntryProperty ("<b>Remote</b> Socket Path:", config.remote_socket_path);
 			ipaddr_property = new EntryProperty ("TUN/TAP <b>IPv4 Address</b>:", config.ip_address);
 
-			pre_conn_cmds = new TextViewProperty ("Pre-connection commands");
-			post_conn_cmds = new TextViewProperty ("Post-connection commands");
+			pre_conn_cmds = new TextViewProperty ("<b>Pre-connection</b> commands", config.pre_conn_cmds);
+			post_conn_cmds = new TextViewProperty ("<b>Post-connection</b> commands", config.post_conn_cmds);
 
 			checkbuttons_box = new HBox (true, 2);
 			button_ssh = new CheckButton.with_label ("Use SSH keys");
@@ -253,14 +258,15 @@ namespace VDEPN {
 					activate_connection.sensitive = false;
 
 					Thread.create<void*> (() => {
+							config.update_configuration (socket_property.get_value (), remote_socket_property.get_value (),
+														 machine_property.get_value (),
+														 user_property.get_value (), ipaddr_property.get_value (),
+														 pre_conn_cmds.get_value (), post_conn_cmds.get_value (),
+														 button_checkhost.active, button_ssh.active);
+
 							/* this actually activates the connection */
 							if (button_status == false) {
 								try {
-									config.update_configuration (socket_property.get_value (), remote_socket_property.get_value (),
-																 machine_property.get_value (),
-																 user_property.get_value (), ipaddr_property.get_value (),
-																 button_checkhost.active, button_ssh.active);
-
 									/* this may throws exceptions */
 									father.connections_manager.new_connection (config);
 									button_status = true;
@@ -301,7 +307,7 @@ namespace VDEPN {
 							/* it's enough, I hate spinners. BURN'EM WITH FIRE */
 							conn_spinner.stop ();
 							left_pane.remove (conn_spinner);
-							left_pane.pack_start (activate_connection, true, true, 0);
+							left_pane.pack_start (activate_connection, false, false, 0);
 							show_all ();
 							return null;
 						}, false);

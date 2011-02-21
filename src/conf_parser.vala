@@ -44,6 +44,8 @@ namespace VDEPN {
 		public string	password			{ get; private set; }
 		public string	iface				{ get; private set; }
 		public string	ip_address			{ get; private set; }
+		public string	pre_conn_cmds		{ get; private set; }
+		public string	post_conn_cmds		{ get; private set; }
 		public bool		use_dhcp			{ get; private set; }
 		public bool		use_keys			{ get; private set; }
 		public bool		checkhost			{ get; private set; }
@@ -57,6 +59,7 @@ namespace VDEPN {
 			password = "change-me";
 			iface = "change-me";
 			ip_address = "127.0.0.1";
+			pre_conn_cmds = post_conn_cmds = "";
 			use_dhcp = false;
 			use_keys = false;
 			checkhost = true;
@@ -106,6 +109,12 @@ namespace VDEPN {
 					if ((checkrequired != null) && (checkrequired->children->get_content () == "true"))
 						checkhost = true;
 					break;
+				case "pre_conn_cmds":
+					pre_conn_cmds = conf_node->get_content ();
+					break;
+				case "post_conn_cmds":
+					post_conn_cmds = conf_node->get_content ();
+					break;
 				case "password":
 					Xml.Attr *required;
 					Xml.Attr *usekeys;
@@ -142,8 +151,8 @@ namespace VDEPN {
 
 		public void update_configuration (string new_sock, string new_remote_socket,
 										  string new_machine, string new_user,
-										  string new_ip_address, bool new_checkhost,
-										  bool new_ssh_keys) {
+										  string new_ip_address, string pre_conn, string post_conn,
+										  bool new_checkhost, bool new_ssh_keys) {
 			socket_path = new_sock;
 			remote_socket_path = new_remote_socket;
 			machine = new_machine;
@@ -151,6 +160,8 @@ namespace VDEPN {
 			ip_address = new_ip_address;
 			checkhost = new_checkhost;
 			use_keys = new_ssh_keys;
+			pre_conn_cmds = pre_conn.replace ("&", "$AND");
+			post_conn_cmds = post_conn.replace ("&", "$AND");
 		}
 
 		/* Since in Vala there's no methods overloading, this function
@@ -187,11 +198,19 @@ namespace VDEPN {
 			password_node->set_prop ("required", "false");
 			password_node->set_prop ("usekeys", "false");
 
+			Xml.Node *pre_conn_node = new Xml.Node (null, "pre_conn_cmds");
+			pre_conn_node->set_content (pre_conn_cmds);
+
+			Xml.Node *post_conn_node = new Xml.Node (null, "post_conn_cmds");
+			post_conn_node->set_content (post_conn_cmds);
+
 			root_node->add_child (sock_path_node);
 			root_node->add_child (remote_sock_path_node);
 			root_node->add_child (ipaddress_node);
 			root_node->add_child (user_node);
 			root_node->add_child (machine_node);
+			root_node->add_child (pre_conn_node);
+			root_node->add_child (post_conn_node);
 			root_node->add_child (password_node);
 
 			if (p != null) {

@@ -122,6 +122,7 @@ namespace VDEPN {
 						page.config.update_configuration (page.socket_property.get_value (), page.remote_socket_property.get_value (),
 														  page.machine_property.get_value (),
 														  page.user_property.get_value (), page.ipaddr_property.get_value (),
+														  page.pre_conn_cmds.get_value (), page.post_conn_cmds.get_value (),
 														  page.button_checkhost.active, page.button_ssh.active);
 						page.config.store_configuration (conf_holder);
 					}

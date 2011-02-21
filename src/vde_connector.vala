@@ -134,6 +134,11 @@ namespace VDEPN.Manager
 				string root_script;
 				string temp_file;
 				string result;
+				string pre_conn_cmds = replace_variables (conf.pre_conn_cmds);
+				string post_conn_cmds = replace_variables (conf.post_conn_cmds);
+
+				Helper.debug (Helper.TAG_DEBUG, "PRECONN: " + pre_conn_cmds);
+				Helper.debug (Helper.TAG_DEBUG, "POSTCONN: " + post_conn_cmds);
 
 				GLib.FileUtils.open_tmp ("vdepn-XXXXXX.sh", out temp_file);
 				GLib.FileUtils.chmod (temp_file, 0700);
@@ -186,18 +191,25 @@ namespace VDEPN.Manager
 				user_script += "sleep 5\n\n";
 
 				/* vde_plug pid acquiring (or script failure) */
-				user_script += pgrep_cmd + " -fn \"" +  local_vde_plug_cmd + "\" > /dev/null || echo VDEPLUGERROR";
+				user_script += pgrep_cmd + " -fn \"" +  local_vde_plug_cmd + "\" > /dev/null || echo VDEPLUGERROR\n\n";
+
+				/* execute pre connection commands */
+				user_script += pre_conn_cmds + "\n\n";
 
 
 				/* Privileged (root) part of the script */
 				root_script = "#!/bin/sh\n\n";
 
 				/* vde_plug2tap */
-				root_script += vde_plug2tap_cmd + " -s " + configuration.socket_path + " " + configuration.connection_name + " &\n";
+				root_script += vde_plug2tap_cmd + " -s " + configuration.socket_path + " " + configuration.connection_name + " & \n";
 
 				/* ifconfig up */
 				root_script += ifconfig_cmd + " " + configuration.connection_name + " " + configuration.ip_address + " up\n";
 
+				/* execute post connection commands */
+				root_script += post_conn_cmds + "\n\n";
+
+				Helper.debug (Helper.TAG_DEBUG, root_script);
 
 				/* Execute user script */
 				GLib.FileUtils.set_contents (temp_file, user_script, -1);
@@ -209,16 +221,25 @@ namespace VDEPN.Manager
 				GLib.FileUtils.get_contents ("/tmp/vdepn-" + configuration.connection_name + ".pid", out pidtmp, null);
 				vde_switch_pid = pidtmp.to_int ();
 
+				/* An error occured while creating the switch, there's no need to cleanup */
 				if (result.chomp () == "VDESWITCHERROR") {
 					GLib.FileUtils.remove (temp_file);
 					throw new ConnectorError.CONNECTION_FAILED ("Failure while creating the local switch");
 				}
 
-				/* Clean the filesystem and return an error */
+				/* Error occured while plugging to the remote machine,
+				 * clean the filesystem and return an error */
 				else if (result.chomp () == "VDEPLUGERROR") {
 					destroy_connection ();
 					GLib.FileUtils.remove (temp_file);
 					throw new ConnectorError.CONNECTION_FAILED ("Failure, remote socket closed connection");
+				}
+
+				/* Error occured while executing the user provided script, cleanup */
+				else if (result.chomp () == "PCMDERROR") {
+					destroy_connection ();
+					GLib.FileUtils.remove (temp_file);
+					throw new ConnectorError.CONNECTION_FAILED ("Failure while executing the pre-connection commands");
 				}
 
 				else {
@@ -239,6 +260,28 @@ namespace VDEPN.Manager
 			catch (GLib.Error e) {
 				throw new ConnectorError.CONNECTION_FAILED (e.message);
 			}
+		}
+
+		/* build up the pre_conn and post_conn cmds by substituting
+		 * the default variables found with actual values:
+		 * valid variables are:
+		 *		- $IFACE	-> TUN/TAP Interface
+		 *		- $LOCAL	-> Local Socket Path
+		 *		- $REMOTE	-> Remote Socket Path
+		 *		- $MACHINE	-> Remote Machine
+		 *		- $USER		-> Connection User
+		 * There are even two special variable which are
+		 *		- $CHECK	-> Controls if the command is being executed
+		 *		- $AND		-> Appends '&' to the command (which won't be possible due to XML entities)
+		 */
+		private string replace_variables (string initial_string) {
+			return initial_string.replace ("$IFACE", configuration.connection_name)
+				.replace ("$LOCAL", configuration.socket_path)
+				.replace ("$REMOTE", configuration.remote_socket_path)
+			.replace ("$MACHINE", configuration.machine)
+			.replace ("$USER", configuration.user)
+			.replace ("$AND", "&")
+			.replace ("$CHECK", "|| (echo PCMDERROR && exit 255)");
 		}
 
 		/* checks the exit status of a simple ssh connection to the
