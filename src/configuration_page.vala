@@ -113,7 +113,7 @@ namespace VDEPN {
 			container = new ScrolledWindow (null, null);
 			text_view_entry = new TextView ();
 			TextBuffer tb = text_view_entry.get_buffer ();
-			tb.set_text (initial_value, initial_value.length);
+			tb.set_text (initial_value, (int) initial_value.length);
 
 			text_view_entry.set_buffer (tb);
 			description_label = new Label (label);
