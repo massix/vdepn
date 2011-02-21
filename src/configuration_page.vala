@@ -172,9 +172,11 @@ namespace VDEPN {
 		private ConfigurationsList father;
 		private VNotification notificator;
 		private HBox checkbuttons_box;
+		private HBox inner_buttons_box;
 		private VBox left_pane;
 		private VBox right_pane;
 		private Spinner conn_spinner;
+		private Button hide_right_pane_button;
 
 		/* read-only properties (left part of the pane) */
 		public ConfigurationProperty conn_name_property		{ get; private set; }
@@ -240,7 +242,13 @@ namespace VDEPN {
 			button_ssh.active = config.use_keys;
 			button_checkhost.active = config.checkhost;
 
+			inner_buttons_box = new HBox (true, 4);
+			hide_right_pane_button = new Button.with_label ("Hide Advanced");
+
 			Button activate_connection = get_button ();
+
+			inner_buttons_box.pack_start (activate_connection, true, true, 0);
+			inner_buttons_box.pack_start (hide_right_pane_button, true, true, 0);
 
 			/* left part of the pane */
 			left_pane.pack_start ((Widget) conn_name_property, false, false, 0);
@@ -251,7 +259,7 @@ namespace VDEPN {
 			left_pane.pack_start ((Widget) remote_socket_property, false, false, 0);
 			left_pane.pack_start ((Widget) ipaddr_property, false, false, 0);
 			left_pane.pack_start (checkbuttons_box, false, false, 0);
-			left_pane.pack_start (activate_connection, false, false, 0);
+			left_pane.pack_start (inner_buttons_box, false, false, 0);
 
 			pack1 (left_pane, false, false);
 
@@ -261,12 +269,21 @@ namespace VDEPN {
 
 			pack2 (right_pane, true, true);
 
+			/* Signals */
+
+			/* Hide and shows the right part of the paned */
+			hide_right_pane_button.clicked.connect (() => {
+					get_child2 ().visible = !get_child2 ().visible;
+					hide_right_pane_button.label = get_child2 ().visible ? "Hide Advanced" : "Show Advanced";
+				});
+
+
 			/* tries to activate the connection, showing a fancy
 			 * spinner while the Application works in background */
 			activate_connection.clicked.connect ((ev) => {
-					left_pane.remove (activate_connection);
+					left_pane.remove (inner_buttons_box);
 					left_pane.pack_start (conn_spinner, true, true, 0);
-					show_all ();
+					left_pane.show_all ();
 					conn_spinner.start ();
 
 					/* Avoid starting multiple threads accidentally */
@@ -323,9 +340,9 @@ namespace VDEPN {
 							conn_spinner.stop ();
 							Gdk.threads_enter ();
 							left_pane.remove (conn_spinner);
-							left_pane.pack_start (activate_connection, false, false, 0);
+							left_pane.pack_start (inner_buttons_box, false, false, 0);
+							left_pane.show_all ();
 							Gdk.threads_leave ();
-							show_all ();
 							return null;
 						}, false);
 
