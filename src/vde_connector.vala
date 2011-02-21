@@ -204,6 +204,9 @@ namespace VDEPN.Manager
 				/* vde_plug2tap */
 				root_script += vde_plug2tap_cmd + " -s " + configuration.socket_path + " " + configuration.connection_name + " & \n";
 
+				/* sleep for a while */
+				root_script += "sleep 3\n\n";
+
 				/* ifconfig up */
 				root_script += ifconfig_cmd + " " + configuration.connection_name + " " + configuration.ip_address + " up\n";
 
