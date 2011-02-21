@@ -113,9 +113,16 @@ namespace VDEPN {
 			container = new ScrolledWindow (null, null);
 			text_view_entry = new TextView ();
 			TextBuffer tb = text_view_entry.get_buffer ();
-			tb.set_text (initial_value, (int) initial_value.length);
 
-			text_view_entry.set_buffer (tb);
+			if ((initial_value != null) && (initial_value.chomp () != "")) {
+				tb.set_text (initial_value, (int) initial_value.length);
+				text_view_entry.set_buffer (tb);
+			}
+			else {
+				tb.set_text ("", (int) 1);
+				text_view_entry.set_buffer (tb);
+			}
+
 			description_label = new Label (label);
 			description_label.use_markup = true;
 
@@ -213,8 +220,10 @@ namespace VDEPN {
 			remote_socket_property = new EntryProperty ("<b>Remote</b> Socket Path:", config.remote_socket_path);
 			ipaddr_property = new EntryProperty ("TUN/TAP <b>IPv4 Address</b>:", config.ip_address);
 
-			pre_conn_cmds = new TextViewProperty ("<b>Pre-connection</b> commands", config.pre_conn_cmds);
-			post_conn_cmds = new TextViewProperty ("<b>Post-connection</b> commands", config.post_conn_cmds);
+			string value = (config.pre_conn_cmds != null) ? config.pre_conn_cmds : "whoami";
+			pre_conn_cmds = new TextViewProperty ("<b>Pre-connection</b> commands", value);
+			value = (config.post_conn_cmds != null) ? config.post_conn_cmds : "whoami";
+			post_conn_cmds = new TextViewProperty ("<b>Post-connection</b> commands", value);
 
 			checkbuttons_box = new HBox (true, 2);
 			button_ssh = new CheckButton.with_label ("Use SSH keys");
