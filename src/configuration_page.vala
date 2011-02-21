@@ -318,8 +318,10 @@ namespace VDEPN {
 
 							/* it's enough, I hate spinners. BURN'EM WITH FIRE */
 							conn_spinner.stop ();
+							Gdk.threads_enter ();
 							left_pane.remove (conn_spinner);
 							left_pane.pack_start (activate_connection, false, false, 0);
+							Gdk.threads_leave ();
 							show_all ();
 							return null;
 						}, false);
