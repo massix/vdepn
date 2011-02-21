@@ -57,6 +57,7 @@ namespace VDEPN {
 			conn_root_elem->add_child (conn_machine);
 			conn_machine->set_content ("vde2.v2.cs.unibo.it");
 			conn_machine->set_prop ("checkhost", "true");
+			conn_machine->set_prop ("port", "22");
 
 			conn_root_elem->add_child (conn_password);
 			conn_password->set_prop ("required", "false");

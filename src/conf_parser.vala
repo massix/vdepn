@@ -41,6 +41,7 @@ namespace VDEPN {
 		public string	remote_socket_path	{ get; private set; }
 		public string	user				{ get; private set; }
 		public string	machine				{ get; private set; }
+		public string	port				{ get; private set; }
 		public string	password			{ get; private set; }
 		public string	iface				{ get; private set; }
 		public string	ip_address			{ get; private set; }
@@ -54,8 +55,9 @@ namespace VDEPN {
 			connection_name = conf_name;
 			socket_path = "/tmp/vde.ctl";
 			remote_socket_path = "/tmp/vde.ctl";
-			user = "change-me";
-			machine = "change-me";
+			user = "localuser";
+			machine = "localhost";
+			port = "22";
 			password = "change-me";
 			iface = "change-me";
 			ip_address = "127.0.0.1";
@@ -104,10 +106,16 @@ namespace VDEPN {
 					break;
 				case "machine":
 					Xml.Attr *checkrequired;
+					Xml.Attr *port_attr;
 					machine = conf_node->get_content ();
 					checkrequired = conf_node->has_prop ("checkrequired");
 					if ((checkrequired != null) && (checkrequired->children->get_content () == "true"))
 						checkhost = true;
+					port_attr = conf_node->has_prop ("port");
+					if ((port_attr != null) && (port_attr->children->get_content ().chomp () != ""))
+						port = port_attr->children->get_content ();
+					else
+						port = "22";
 					break;
 				case "pre_conn_cmds":
 					pre_conn_cmds = conf_node->get_content ();
@@ -150,12 +158,13 @@ namespace VDEPN {
 		}
 
 		public void update_configuration (string new_sock, string new_remote_socket,
-										  string new_machine, string new_user,
+										  string new_machine, string new_port, string new_user,
 										  string new_ip_address, string pre_conn, string post_conn,
 										  bool new_checkhost, bool new_ssh_keys) {
 			socket_path = new_sock;
 			remote_socket_path = new_remote_socket;
 			machine = new_machine;
+			port = new_port;
 			user = new_user;
 			ip_address = new_ip_address;
 			checkhost = new_checkhost;
@@ -193,6 +202,7 @@ namespace VDEPN {
 			Xml.Node *machine_node = new Xml.Node (null, "machine");
 			machine_node->set_content (machine);
 			machine_node->set_prop ("checkrequired", checkhost.to_string ());
+			machine_node->set_prop ("port", port);
 
 			Xml.Node *password_node = new Xml.Node (null, "password");
 			password_node->set_prop ("required", "false");

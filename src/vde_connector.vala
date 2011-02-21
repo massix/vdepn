@@ -183,7 +183,8 @@ namespace VDEPN.Manager
 				user_script += pgrep_cmd + " -n vde_switch > /tmp/vdepn-" + configuration.connection_name + ".pid\n";
 
 				/* dpipe ssh connection (ssh args user@machine "vde_plug remote_sock_path" = vde_plug local_sock_path */
-				user_script += dpipe_cmd + " ssh " + Helper.SSH_ARGS + " " + configuration.user + "@" + configuration.machine + " ";
+				string ssh_args = Helper.SSH_ARGS + " -p " + configuration.port;
+				user_script += dpipe_cmd + " ssh " + ssh_args + " " + configuration.user + "@" + configuration.machine + " ";
 				user_script += "\"" + remote_vde_plug_cmd + "\" ";
 				user_script += "= " + local_vde_plug_cmd + " &\n";
 
@@ -287,7 +288,8 @@ namespace VDEPN.Manager
 		/* checks the exit status of a simple ssh connection to the
 		 * given host */
 		private bool check_ssh_host () throws GLib.Error {
-			string command = "ssh " + Helper.SSH_ARGS + " " +
+			string ssh_args = Helper.SSH_ARGS + " -p " + configuration.port;
+			string command = "ssh " + ssh_args + " " +
 							 configuration.user + "@" + configuration.machine + " exit";
 
 			try {

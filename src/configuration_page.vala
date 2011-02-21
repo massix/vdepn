@@ -173,9 +173,10 @@ namespace VDEPN {
 		public ConfigurationProperty socket_property		{ get; private set; }
 		public ConfigurationProperty remote_socket_property { get; private set; }
 		public ConfigurationProperty ipaddr_property		{ get; private set; }
+		public ConfigurationProperty machine_port_property	{ get; private set; }
+
 
 		/* advanced properties (right part of the pane) */
-		public ConfigurationProperty machine_port			{ get; private set; }
 		public ConfigurationProperty pre_conn_cmds			{ get; private set; }
 		public ConfigurationProperty post_conn_cmds			{ get; private set; }
 
@@ -206,6 +207,7 @@ namespace VDEPN {
 			conn_name_property.set_editable (false);
 
 			machine_property = new EntryProperty ("VDE <b>Machine</b>:", config.machine);
+			machine_port_property = new EntryProperty ("VDE Machine <b>Port</b>:" , config.port);
 			user_property = new EntryProperty ("VDE <b>User</b>:" , config.user);
 			socket_property = new EntryProperty ("<b>Local</b> Socket Path:", config.socket_path);
 			remote_socket_property = new EntryProperty ("<b>Remote</b> Socket Path:", config.remote_socket_path);
@@ -231,6 +233,7 @@ namespace VDEPN {
 			/* left part of the pane */
 			left_pane.pack_start ((Widget) conn_name_property, false, false, 0);
 		 	left_pane.pack_start ((Widget) machine_property, false, false, 0);
+			left_pane.pack_start ((Widget) machine_port_property, false, false, 0);
 			left_pane.pack_start ((Widget) user_property, false, false, 0);
 			left_pane.pack_start ((Widget) socket_property, false, false, 0);
 			left_pane.pack_start ((Widget) remote_socket_property, false, false, 0);
@@ -259,7 +262,7 @@ namespace VDEPN {
 
 					Thread.create<void*> (() => {
 							config.update_configuration (socket_property.get_value (), remote_socket_property.get_value (),
-														 machine_property.get_value (),
+														 machine_property.get_value (), machine_port_property.get_value (),
 														 user_property.get_value (), ipaddr_property.get_value (),
 														 pre_conn_cmds.get_value (), post_conn_cmds.get_value (),
 														 button_checkhost.active, button_ssh.active);
