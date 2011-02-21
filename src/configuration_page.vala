@@ -130,8 +130,11 @@ namespace VDEPN {
 			pack_start (description_label, false, false, 0);
 			container.add (text_view_entry);
 
+			/* Graphical changes */
 			container.hscrollbar_policy = PolicyType.AUTOMATIC;
 			container.vscrollbar_policy = PolicyType.AUTOMATIC;
+			container.set_shadow_type (Gtk.ShadowType.ETCHED_OUT);
+			text_view_entry.left_margin = text_view_entry.right_margin = 4;
 
 			text_view_entry.wrap_mode = Gtk.WrapMode.NONE;
 
