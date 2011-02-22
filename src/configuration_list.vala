@@ -191,6 +191,7 @@ namespace VDEPN {
 								conf_pages.append_page (p, new Label (new_conf.connection_name));
 								conf_pages.show_all ();
 								pages_list.append (p);
+								switch_page (new_conf.connection_name);
 								new_conf_dialog.destroy ();
 							}
 							else
