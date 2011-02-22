@@ -21,7 +21,9 @@ namespace VDEPN.Manager
 {
 	public errordomain ConnectorError {
 		COMMAND_NOT_FOUND,
-		CONNECTION_FAILED
+		CONNECTION_FAILED,
+		CONNECTION_NOT_FOUND,
+		DUPLICATE_CONNECTION
 	}
 
 	/* Main class, keeps track of all the active connections, creating
@@ -47,32 +49,28 @@ namespace VDEPN.Manager
 		}
 
 		/* Builds up a new connection starting with an existing configuration */
-		public bool new_connection (VDEConfiguration conf) throws ConnectorError {
-			foreach (VDEConnection c in active_connections) {
-				if (c.conn_id == conf.connection_name) {
-					Helper.debug (Helper.TAG_ERROR, "Connection is still alive");
-					return false;
-				}
+		public void new_connection (VDEConfiguration conf) throws ConnectorError {
+			try {
+				VDEConnection should_not_exist = get_connection_from_name (conf.connection_name);
+				/* If we arrive here, the connection already exists so we throw an exception */
+				throw new ConnectorError.DUPLICATE_CONNECTION (_("Duplicate connection found in the pool of active connections"));
 			}
 
-			VDEConnection new_one = new VDEConnection.with_path (conf);
-			active_connections.append (new_one);
-			return true;
+			/* While if we are here, everything is right, since the connection isn't already in the pool */
+			catch (ConnectorError e) {
+				VDEConnection new_one = new VDEConnection (conf);
+				active_connections.append (new_one);
+			}
 		}
 
 		/* Removes an existing connection */
-		public bool rm_connection (string id) {
-			foreach (VDEConnection c in active_connections) {
-				if (c.conn_id == id) {
-					if (c.destroy_connection ()) {
-						active_connections.remove (c);
-						return true;
-					}
-				}
-			}
+		public void rm_connection (string id) {
+			VDEConnection to_be_removed = get_connection_from_name (id);
+			to_be_removed.destroy_connection ();
+			active_connections.remove (to_be_removed);
 
-			Helper.debug (Helper.TAG_ERROR, "Connection not found in active connections list");
-			return false;
+			/* The exception that may be thrown will be catched from
+			 * the caller */
 		}
 
 		/* Returns the number of currently active connections */
@@ -83,6 +81,17 @@ namespace VDEPN.Manager
 		/* Get the connection identified by its position into the list */
 		public VDEConnection get_connection (uint index) {
 			return active_connections.nth_data (index);
+		}
+
+		/* Get the connection identified by its name or null if the
+		 * connection doesn't exist in the pool */
+		public VDEConnection get_connection_from_name (string connection_id) throws ConnectorError {
+			foreach (VDEConnection c in active_connections) {
+				if (c.conn_id == connection_id)
+					return c;
+			}
+
+			throw new ConnectorError.CONNECTION_NOT_FOUND (_("Connection not found in the active connections pool"));
 		}
 	}
 
@@ -133,7 +142,7 @@ namespace VDEPN.Manager
 
 		/* creates a new connection with the given configuration,
 		 * throwing an exception if it fails for some reason */
-		public VDEConnection.with_path (VDEConfiguration conf) throws ConnectorError {
+		public VDEConnection (VDEConfiguration conf) throws ConnectorError {
 			configuration = conf;
 			conn_id = conf.connection_name;
 
