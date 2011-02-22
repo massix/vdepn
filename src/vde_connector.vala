@@ -17,8 +17,7 @@
  *
  */
 
-namespace VDEPN.Manager
-{
+namespace VDEPN.Manager {
 	public errordomain ConnectorError {
 		COMMAND_NOT_FOUND,
 		CONNECTION_FAILED,
@@ -83,8 +82,8 @@ namespace VDEPN.Manager
 			return active_connections.nth_data (index);
 		}
 
-		/* Get the connection identified by its name or null if the
-		 * connection doesn't exist in the pool */
+		/* Get the connection identified by its name or throw an
+		 * exception if the connection doesn't exist in the pool */
 		public VDEConnection get_connection_from_name (string connection_id) throws ConnectorError {
 			foreach (VDEConnection c in active_connections) {
 				if (c.conn_id == connection_id)
