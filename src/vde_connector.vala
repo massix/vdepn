@@ -218,8 +218,6 @@ namespace VDEPN.Manager
 				/* execute post connection commands */
 				root_script += post_conn_cmds + "\n\n";
 
-				Helper.debug (Helper.TAG_DEBUG, root_script);
-
 				/* Execute user script */
 				GLib.FileUtils.set_contents (temp_file, user_script, -1);
 				GLib.FileUtils.chmod (temp_file, 0700);
