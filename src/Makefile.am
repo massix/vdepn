@@ -12,6 +12,8 @@ AM_CPPFLAGS = \
 			$(LIBXML_CFLAGS)
 
 AM_VALAFLAGS = \
+			--disable-assert \
+			--disable-warnings \
 			--pkg libxml-2.0 \
 			--pkg gtk+-2.0 \
 			--pkg config \
@@ -25,7 +27,9 @@ vde_manager_SOURCES = \
 			conf_parser.vala \
 			helper.vala \
 			main.vala \
+			configuration_property.vala \
 			configuration_page.vala \
+			tray_icon.vala \
 			vde_connector.vala
 
 vde_manager_LDFLAGS = \
