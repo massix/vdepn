@@ -21,3 +21,7 @@ Makefile
 *.xml
 INSTALL
 m4
+mkinstalldirs
+po/POTFILES
+po/it.gmo
+po/stamp-it
