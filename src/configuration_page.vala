@@ -95,7 +95,7 @@ namespace VDEPN {
 			GLib.Object ();
 
 			left_pane = new VBox (true, 0);
-			right_pane = new VBox (false, 0);
+			right_pane = new VBox (false, 30);
 
 			this.config = v;
 			this.father = father;
