@@ -124,7 +124,7 @@ msgid "_Help"
 msgstr "_Aiuto"
 
 #: ../src/configuration_list.vala:253 ../src/configuration_list.vala:298
-#: ../src/configuration_list.vala:254
+#: ../src/configuration_list.vala:254 ../src/tray_icon.vala:46
 msgid "Active Connections"
 msgstr "Connessioni attive"
 
@@ -140,38 +140,46 @@ msgstr "Esci comunque"
 msgid "Cancel"
 msgstr "Cancella"
 
-#: ../src/configuration_list.vala:299
+#: ../src/configuration_list.vala:299 ../src/tray_icon.vala:47
 msgid "Quit VDE PN Manager"
 msgstr "Esci da VDEPN Manager"
 
-#: ../src/configuration_list.vala:313
+#: ../src/configuration_list.vala:313 ../src/tray_icon.vala:61
 msgid "No active Connections"
 msgstr "Nessuna connessione attiva"
 
-#: ../src/vde_connector.vala:149
+#: ../src/vde_connector.vala:149 ../src/vde_connector.vala:165
 msgid "VDE not fully installed"
 msgstr "VDE non installato correttamente"
 
-#: ../src/vde_connector.vala:152
+#: ../src/vde_connector.vala:152 ../src/vde_connector.vala:168
 msgid "pkexec not found, root unavailable"
 msgstr "pkexec non trovato, root non disponibile"
 
-#: ../src/vde_connector.vala:155
+#: ../src/vde_connector.vala:155 ../src/vde_connector.vala:171
 msgid "pgrep not found, can't kill the switches"
 msgstr "pgrep non trovato, non posso terminare gli switch"
 
-#: ../src/vde_connector.vala:158
+#: ../src/vde_connector.vala:158 ../src/vde_connector.vala:174
 msgid "ifconfig not found, can't set up interface"
 msgstr "ifconfig non trovato, non posso impostare l'interfaccia"
 
-#: ../src/vde_connector.vala:228
+#: ../src/vde_connector.vala:228 ../src/vde_connector.vala:242
 msgid "Failure while creating the local switch"
 msgstr "Errore nel tentativo di creazione dello switch locale"
 
-#: ../src/vde_connector.vala:236
+#: ../src/vde_connector.vala:236 ../src/vde_connector.vala:250
 msgid "Failure, remote socket closed connection"
 msgstr "Errore, il socket remoto ha chiuso la connessione"
 
-#: ../src/vde_connector.vala:243
+#: ../src/vde_connector.vala:243 ../src/vde_connector.vala:257
 msgid "Failure while executing the pre-connection commands"
 msgstr "Errore durante l'esecuzione dei comandi di pre-connessione"
+
+#: ../src/vde_connector.vala:55
+msgid "Duplicate connection found in the pool of active connections"
+msgstr "Trovato un duplicato di connessione nel pool delle connessioni attive"
+
+#: ../src/vde_connector.vala:93
+msgid "Connection not found in the active connections pool"
+msgstr "Connessione non trovata nel pool delle connessioni attive"
