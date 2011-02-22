@@ -137,9 +137,6 @@ namespace VDEPN.Manager
 				string pre_conn_cmds = replace_variables (conf.pre_conn_cmds);
 				string post_conn_cmds = replace_variables (conf.post_conn_cmds);
 
-				Helper.debug (Helper.TAG_DEBUG, "PRECONN: " + pre_conn_cmds);
-				Helper.debug (Helper.TAG_DEBUG, "POSTCONN: " + post_conn_cmds);
-
 				GLib.FileUtils.open_tmp ("vdepn-XXXXXX.sh", out temp_file);
 				GLib.FileUtils.chmod (temp_file, 0700);
 
@@ -149,16 +146,16 @@ namespace VDEPN.Manager
 					(vde_plug_cmd == null) ||
 					(dpipe_cmd == null) ||
 					(vde_plug2tap_cmd == null))
-					throw new ConnectorError.COMMAND_NOT_FOUND ("VDE not fully installed");
+					throw new ConnectorError.COMMAND_NOT_FOUND (_("VDE not fully installed"));
 
 				if (pkexec_cmd == null)
-					throw new ConnectorError.COMMAND_NOT_FOUND ("pkexec not found, root unavailable");
+					throw new ConnectorError.COMMAND_NOT_FOUND (_("pkexec not found, root unavailable"));
 
 				if (pgrep_cmd == null)
-					throw new ConnectorError.COMMAND_NOT_FOUND ("pgrep not found, can't kill the switches");
+					throw new ConnectorError.COMMAND_NOT_FOUND (_("pgrep not found, can't kill the switches"));
 
 				if (ifconfig_cmd == null)
-					throw new ConnectorError.COMMAND_NOT_FOUND ("ifconfig not found, can't set up interface");
+					throw new ConnectorError.COMMAND_NOT_FOUND (_("ifconfig not found, can't set up interface"));
 
 				/* check wether the SSH host accepts us */
 				if (configuration.checkhost && check_ssh_host ()) {
@@ -228,7 +225,7 @@ namespace VDEPN.Manager
 				/* An error occured while creating the switch, there's no need to cleanup */
 				if (result.chomp () == "VDESWITCHERROR") {
 					GLib.FileUtils.remove (temp_file);
-					throw new ConnectorError.CONNECTION_FAILED ("Failure while creating the local switch");
+					throw new ConnectorError.CONNECTION_FAILED (_("Failure while creating the local switch"));
 				}
 
 				/* Error occured while plugging to the remote machine,
@@ -236,14 +233,14 @@ namespace VDEPN.Manager
 				else if (result.chomp () == "VDEPLUGERROR") {
 					destroy_connection ();
 					GLib.FileUtils.remove (temp_file);
-					throw new ConnectorError.CONNECTION_FAILED ("Failure, remote socket closed connection");
+					throw new ConnectorError.CONNECTION_FAILED (_("Failure, remote socket closed connection"));
 				}
 
 				/* Error occured while executing the user provided script, cleanup */
 				else if (result.chomp () == "PCMDERROR") {
 					destroy_connection ();
 					GLib.FileUtils.remove (temp_file);
-					throw new ConnectorError.CONNECTION_FAILED ("Failure while executing the pre-connection commands");
+					throw new ConnectorError.CONNECTION_FAILED (_("Failure while executing the pre-connection commands"));
 				}
 
 				else {

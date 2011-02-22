@@ -1,3 +1,1 @@
-SUBDIRS=src share
-bindir=$(prefix)/bin
-
+SUBDIRS=src share po

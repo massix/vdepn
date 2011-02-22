@@ -89,6 +89,11 @@ namespace VDEPN {
 			set_application_name ("VDE PN Manager");
 			set_prgname ("VDE PN Manager");
 
+			/* Internationalization support */
+			Intl.bindtextdomain (Config.GETTEXT_PACKAGE, Config.LOCALEDIR);
+			Intl.bind_textdomain_codeset (Config.GETTEXT_PACKAGE, "UTF-8");
+			Intl.textdomain (Config.GETTEXT_PACKAGE);
+
 			Gtk.init (ref args);
 			Gdk.threads_init ();
 

@@ -22,5 +22,6 @@ namespace Config {
 	public const string PACKAGE_VERSION;
 	public const string PACKAGE_NAME;
 	public const string PKGDATADIR;
+	public const string GETTEXT_PACKAGE;
+	public const string LOCALEDIR;
 }
-

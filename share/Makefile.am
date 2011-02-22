@@ -5,4 +5,6 @@ image_DATA = \
 	vdepn_big.svg
 
 applicationdir=$(prefix)/share/applications
-application_DATA = vdepn.desktop
+application_in_files = vdepn.desktop.in
+application_DATA = $(application_in_files:.desktop.in=.desktop)
+@INTLTOOL_DESKTOP_RULE@

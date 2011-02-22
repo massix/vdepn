@@ -88,7 +88,7 @@ namespace VDEPN {
 
 			// file
 			Menu file_menu = new Menu ();
-			ImageMenuItem file_item = new ImageMenuItem.with_mnemonic ("_File");
+			ImageMenuItem file_item = new ImageMenuItem.with_mnemonic (_("_File"));
 			ImageMenuItem new_conn_item = new ImageMenuItem.from_stock (Gtk.STOCK_NEW, accel_group);
 			ImageMenuItem save_conn_item = new ImageMenuItem.from_stock (Gtk.STOCK_SAVE, accel_group);
 			ImageMenuItem rm_conn_item = new ImageMenuItem.from_stock (Gtk.STOCK_DELETE, accel_group);
@@ -135,10 +135,10 @@ namespace VDEPN {
 						return;
 					}
 					else {
-						Dialog confirm = new Dialog.with_buttons ("Connection removal", this, DialogFlags.MODAL);
-						confirm.vbox.add (new Label ("This cannot be undone!"));
-						confirm.add_button ("Yes, I'm sure", 0);
-						confirm.add_button ("Abort", 1);
+						Dialog confirm = new Dialog.with_buttons (_("Connection removal"), this, DialogFlags.MODAL);
+						confirm.vbox.add (new Label (_("This cannot be undone!")));
+						confirm.add_button (_("Yes, I'm sure"), 0);
+						confirm.add_button (_("Abort"), 1);
 						confirm.vbox.show_all ();
 						confirm.close.connect ((ev) => { confirm.destroy (); });
 						confirm.response.connect ((ev, resp) => {
@@ -167,7 +167,7 @@ namespace VDEPN {
 
 			new_conn_item.activate.connect ((ev) => {
 					/* show a confirmation dialog when the user asks to create a new connection */
-					Dialog new_conf_dialog = new Dialog.with_buttons ("New Configuration", this, DialogFlags.MODAL);
+					Dialog new_conf_dialog = new Dialog.with_buttons (_("New Configuration"), this, DialogFlags.MODAL);
 					Entry new_conf_entry = new Entry ();
 					new_conf_entry.text = "change";
 
@@ -176,10 +176,10 @@ namespace VDEPN {
 							new_conf_entry.text = new_conf_entry.text.replace (" ", "-");
 						});
 
-					new_conf_dialog.vbox.add (new Label ("New configuration ID"));
+					new_conf_dialog.vbox.add (new Label (_("New configuration ID")));
 					new_conf_dialog.vbox.add (new_conf_entry);
-					new_conf_dialog.add_button ("Create", 0);
-					new_conf_dialog.add_button ("Abort", 1);
+					new_conf_dialog.add_button (_("Create"), 0);
+					new_conf_dialog.add_button (_("Abort"), 1);
 					new_conf_dialog.vbox.show_all ();
 					new_conf_dialog.close.connect ((ev) => { new_conf_dialog.destroy(); });
 					new_conf_dialog.response.connect ((ev, resp) => {
@@ -206,7 +206,7 @@ namespace VDEPN {
 
 			/* building help menu */
 			Menu help_menu = new Menu ();
-			ImageMenuItem help_item = new ImageMenuItem.with_mnemonic ("_Help");
+			ImageMenuItem help_item = new ImageMenuItem.with_mnemonic (_("_Help"));
 			ImageMenuItem about_item = new ImageMenuItem.from_stock (Gtk.STOCK_ABOUT, accel_group);
 			help_menu.append (about_item);
 
@@ -250,10 +250,10 @@ namespace VDEPN {
 		/* If there are active connections, show a dialog warning the user */
 		public void quit_application () {
 			if (connections_manager.count_active_connections () > 0) {
-				Dialog confirm = new Dialog.with_buttons ("Active Connections", this, DialogFlags.MODAL);
-				confirm.vbox.add (new Label ("There are active connections!"));
-				confirm.add_button ("Quit anyway", 0);
-				confirm.add_button ("Cancel", 1);
+				Dialog confirm = new Dialog.with_buttons (_("Active Connections"), this, DialogFlags.MODAL);
+				confirm.vbox.add (new Label (_("There are active connections!")));
+				confirm.add_button (_("Quit anyway"), 0);
+				confirm.add_button (_("Cancel"), 1);
 				confirm.vbox.show_all ();
 				confirm.close.connect ((ev) => { confirm.destroy (); });
 				confirm.response.connect ((ev, resp) => {
@@ -295,8 +295,8 @@ namespace VDEPN {
 			   "No active connections" if none are active */
 			popup_menu.connect ((but, acttime) => {
 					Menu inner_menu = new Menu ();
-					MenuItem act_conn = new MenuItem.with_label ("Active Connections");
-					MenuItem quit_item = new MenuItem.with_label ("Quit VDE PN Manager");
+					MenuItem act_conn = new MenuItem.with_label (_("Active Connections"));
+					MenuItem quit_item = new MenuItem.with_label (_("Quit VDE PN Manager"));
 					SeparatorMenuItem sep = new SeparatorMenuItem ();
 					sep.show ();
 					act_conn.show ();
@@ -310,7 +310,7 @@ namespace VDEPN {
 						});
 
 					if (parent_connector.count_active_connections () <= 0) {
-						MenuItem no_act_conn = new MenuItem.with_label ("No active Connections");
+						MenuItem no_act_conn = new MenuItem.with_label (_("No active Connections"));
 						no_act_conn.show ();
 						inner_menu.append (no_act_conn);
 					}

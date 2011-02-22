@@ -1,0 +1,7 @@
+src/configuration_list.vala 
+src/configuration_page.vala 
+src/conf_parser.vala 
+src/helper.vala 
+src/main.vala 
+src/vde_connector.vala 
+src/share/vdepn.desktop.in

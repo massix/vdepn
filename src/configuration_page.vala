@@ -215,24 +215,24 @@ namespace VDEPN {
 
 			index = father.conf_list.index (config);
 
-			conn_name_property = new EntryProperty ("Connection <b>name</b>:", config.connection_name);
+			conn_name_property = new EntryProperty (_("Connection <b>name</b>:"), config.connection_name);
 			conn_name_property.set_editable (false);
 
-			machine_property = new EntryProperty ("VDE <b>Machine</b>:", config.machine);
-			machine_port_property = new EntryProperty ("VDE Machine <b>Port</b>:" , config.port);
-			user_property = new EntryProperty ("VDE <b>User</b>:" , config.user);
-			socket_property = new EntryProperty ("<b>Local</b> Socket Path:", config.socket_path);
-			remote_socket_property = new EntryProperty ("<b>Remote</b> Socket Path:", config.remote_socket_path);
-			ipaddr_property = new EntryProperty ("TUN/TAP <b>IPv4 Address</b>:", config.ip_address);
+			machine_property = new EntryProperty (_("VDE <b>Machine</b>:"), config.machine);
+			machine_port_property = new EntryProperty (_("VDE Machine <b>Port</b>:") , config.port);
+			user_property = new EntryProperty (_("VDE <b>User</b>:") , config.user);
+			socket_property = new EntryProperty (_("<b>Local</b> Socket Path:"), config.socket_path);
+			remote_socket_property = new EntryProperty (_("<b>Remote</b> Socket Path:"), config.remote_socket_path);
+			ipaddr_property = new EntryProperty (_("TUN/TAP <b>IPv4 Address</b>:"), config.ip_address);
 
 			string value = (config.pre_conn_cmds != null) ? config.pre_conn_cmds : "whoami";
-			pre_conn_cmds = new TextViewProperty ("<b>Pre-connection</b> commands", value);
+			pre_conn_cmds = new TextViewProperty (_("<b>Pre-connection</b> commands"), value);
 			value = (config.post_conn_cmds != null) ? config.post_conn_cmds : "whoami";
-			post_conn_cmds = new TextViewProperty ("<b>Post-connection</b> commands", value);
+			post_conn_cmds = new TextViewProperty (_("<b>Post-connection</b> commands"), value);
 
 			checkbuttons_box = new HBox (true, 2);
-			button_ssh = new CheckButton.with_label ("Use SSH keys");
-			button_checkhost = new CheckButton.with_label ("Check Host");
+			button_ssh = new CheckButton.with_label (_("Use SSH keys"));
+			button_checkhost = new CheckButton.with_label (_("Check Host"));
 
 			conn_spinner = new Spinner ();
 
@@ -243,7 +243,7 @@ namespace VDEPN {
 			button_checkhost.active = config.checkhost;
 
 			inner_buttons_box = new HBox (true, 4);
-			hide_right_pane_button = new Button.with_label ("Hide Advanced");
+			hide_right_pane_button = new Button.with_label (_("Hide Advanced"));
 
 			Button activate_connection = get_button ();
 
@@ -274,7 +274,7 @@ namespace VDEPN {
 			/* Hide and shows the right part of the paned */
 			hide_right_pane_button.clicked.connect (() => {
 					get_child2 ().visible = !get_child2 ().visible;
-					hide_right_pane_button.label = get_child2 ().visible ? "Hide Advanced" : "Show Advanced";
+					hide_right_pane_button.label = get_child2 ().visible ? _("Hide Advanced") : _("Show Advanced");
 				});
 
 
@@ -302,7 +302,7 @@ namespace VDEPN {
 									/* this may throws exceptions */
 									father.connections_manager.new_connection (config);
 									button_status = true;
-									activate_connection.label = "Deactivate";
+									activate_connection.label = _("Deactivate");
 									notificator.conn_active ();
 								}
 
@@ -312,9 +312,9 @@ namespace VDEPN {
 									Dialog error_dialog = new Dialog.with_buttons ("Error", father, DialogFlags.MODAL);
 									Label err_label = new Label ("<b>" + e.message + "</b>");
 									err_label.use_markup = true;
-									error_dialog.vbox.add (new Label ("Error while activating connection"));
+									error_dialog.vbox.add (new Label (_("Error while activating connection")));
 									error_dialog.vbox.add (err_label);
-									error_dialog.add_button ("Close", 0);
+									error_dialog.add_button (_("Close"), 0);
 									error_dialog.vbox.show_all ();
 									error_dialog.close.connect ((ev) => {
 											error_dialog.destroy ();
@@ -330,7 +330,7 @@ namespace VDEPN {
 
 							/* Deactivate the connection */
 							else {
-								activate_connection.label = "Activate";
+								activate_connection.label = _("Activate");
 								father.connections_manager.rm_connection (config.connection_name);
 								button_status = false;
 								notificator.conn_inactive ();
@@ -360,11 +360,11 @@ namespace VDEPN {
 			if (pidfile.query_exists (null)) {
 				father.connections_manager.new_connection_from_pid (config);
 				button_status = true;
-				return new Button.with_label ("Deactivate");
+				return new Button.with_label (_("Deactivate"));
 			}
 			else {
 				button_status = false;
-				return new Button.with_label ("Activate");
+				return new Button.with_label (_("Activate"));
 			}
 		}
 	}
