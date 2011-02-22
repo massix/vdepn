@@ -1,0 +1,74 @@
+VDEPN -- VDEPN Does Extend Private Networking
+=============================================
+
+VDEPN is a small piece of software I wrote to help myself managing the
+$verybig number of Private Networks I daily use.
+
+VDEPN saves all your configuration into a big single file placed in
+your personal $HOME/.config directory, it shouldn't be too difficult
+to tune it by hand if you find something that you can't do with the
+graphical interface.
+
+
+HOW IT WORKS
+------------
+
+It simply generates two scripts, one intended to be run in user mode
+and one to be run in privileged mode, while the first one is the most
+important one, since it creates the various vde_switches and creates
+the SSH connection to the remote host, the latter one requires the
+user to enter the root/sudo password, and it is nicely done using
+PolicyKit.
+
+On the left part of the window there are the various parameters such
+as SSH user, SSH Host, remote socket path, local socket path, .. while
+on the right part there are two small textviews, one for commands to
+be run while in user mode and one for the commands to be run while in
+root mode. Inside those TextView you can enter some variables which
+will be expanded at runtime, so you may end up having a configuration
+that opens an SSH connection with a LocalForward to a remote host and
+after a successfull connection runs dhclient to obtain a valid IP.
+
+The variables are:
+   Variable                 Substitution
+   --------					------------
+   $MACHINE					SSH Host you're connecting to
+   $USER					User who's trying to authenticate
+   $IFACE					Name of the TUN/TAP interface will be used
+   $PORT					Port of the SSH Host
+   $LOCAL					Path of the local socket path
+   $REMOTE					Path of the remote socket path
+   $AND						Becomes & (this is necessary, since the
+   							configuration is saved as XML)
+   $CHECK					Becomes || (echo CMDERROR && exit 255).
+
+
+An example of post-connection commands may be:
+  dhclient -pf /tmp/dhcp$IFACE.pid $CHECK
+
+Doing so, the command will become something like
+  dhclient -pf /tmp/dhcpmynetwork.pid || (echo CMDERROR && exit 255)
+
+And if you're not getting an IP address by DHCLIENT, VDEPN cleans up
+the switch for you.
+
+
+DEVELOPERS
+----------
+
+Actually, I'm quite alone in doing the job.
+
+Massimo Gengarelli <gengarel@cs.unibo.it>
+
+
+OBTAIN CODE
+-----------
+
+I'm actually using two git repos
+
+http://git.casafamelica.info/vdepn.git
+http://github.com/massix/vdepn
+
+The first one is always updated, while the latter one is my `backup'
+tree if the first one fails for some reason.
+

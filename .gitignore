@@ -20,3 +20,4 @@ src/vde_manager
 Makefile
 *.xml
 INSTALL
+m4
