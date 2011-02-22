@@ -294,10 +294,12 @@ namespace VDEPN.Manager
 			return initial_string.replace ("$IFACE", configuration.connection_name)
 				.replace ("$LOCAL", configuration.socket_path)
 				.replace ("$REMOTE", configuration.remote_socket_path)
-			.replace ("$MACHINE", configuration.machine)
-			.replace ("$USER", configuration.user)
-			.replace ("$AND", "&")
-			.replace ("$CHECK", "|| (echo PCMDERROR && exit 255)");
+				.replace ("$MACHINE", configuration.machine)
+				.replace ("$PORT", configuration.port)
+				.replace ("$USER", configuration.user)
+				.replace ("$IPADDR", configuration.ip_address)
+				.replace ("$AND", "&")
+				.replace ("$CHECK", "|| (echo PCMDERROR && exit 255)");
 		}
 
 		/* checks the exit status of a simple ssh connection to the
