@@ -267,11 +267,6 @@ namespace VDEPN.Manager {
 				GLib.FileUtils.remove (temp_file);
 			}
 
-			/* throw the exception to the window who raised it so that
-			 * a nice error dialog may be shown */
-			catch (ConnectorError e) {
-				throw e;
-			}
 			catch (GLib.Error e) {
 				throw new ConnectorError.CONNECTION_FAILED (e.message);
 			}
