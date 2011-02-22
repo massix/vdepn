@@ -366,9 +366,10 @@ namespace VDEPN.Manager
 				/* Wait for the automatic cleaning to finish */
 				script += "sleep 3\n";
 
-				/* Remove PID file and socket */
+				/* Remove PID file and socket (if retrieved) */
 				script += "rm -f /tmp/vdepn-" + conn_id + ".pid\n";
-				script += "rm -rf " + configuration.socket_path + "\n";
+				if (configuration.socket_path != null && configuration.socket_path.chomp () != "")
+					script += "rm -rf " + configuration.socket_path + "\n";
 
 				GLib.FileUtils.set_contents (temp_file, script, -1);
 
