@@ -42,7 +42,7 @@ namespace VDEPN.Manager
 				}
 			}
 
-			active_connections.append (new VDEConnection.from_pid_file (conf.connection_name));
+			active_connections.append (new VDEConnection.from_pid_file (conf));
 			return true;
 		}
 
@@ -91,7 +91,15 @@ namespace VDEPN.Manager
 	 * (if everything went fine) */
 	public class VDEConnection : GLib.Object {
 		private VDEConfiguration configuration;
-		public string conn_id { get; private set; }
+		public string conn_id {
+			get {
+				return configuration.connection_name;
+			}
+
+			private set {
+				/* Do nothing */
+			}
+		}
 
 		/* used while checking ssh host */
 		private string check_host_stderr;
@@ -111,11 +119,11 @@ namespace VDEPN.Manager
 		 * file and the socket location
 		 * FIXME: get the socket location somehow
 		 */
-		public VDEConnection.from_pid_file(string conn_id) {
+		public VDEConnection.from_pid_file(VDEConfiguration conf) {
 			try {
 				string pidtmp;
-				this.conn_id = conn_id;
-				GLib.FileUtils.get_contents ("/tmp/vdepn-" + conn_id + ".pid", out pidtmp);
+				configuration = conf;
+				GLib.FileUtils.get_contents ("/tmp/vdepn-" + configuration.connection_name + ".pid", out pidtmp);
 				vde_switch_pid = pidtmp.to_int ();
 			}
 			catch (Error e) {
