@@ -67,6 +67,7 @@ namespace VDEPN {
 		private VBox right_pane;
 		private Spinner conn_spinner;
 		private Button hide_right_pane_button;
+		private Button activate_button;
 
 		/* read-only properties (left part of the pane) */
 		public ConfigurationProperty conn_name_property		{ get; private set; }
@@ -135,9 +136,9 @@ namespace VDEPN {
 			inner_buttons_box = new HBox (true, 4);
 			hide_right_pane_button = new Button.with_label (_("Hide Advanced"));
 
-			Button activate_connection = get_button ();
+			activate_button = get_button ();
 
-			inner_buttons_box.pack_start (activate_connection, true, true, 0);
+			inner_buttons_box.pack_start (activate_button, true, true, 0);
 			inner_buttons_box.pack_start (hide_right_pane_button, true, true, 0);
 
 			/* left part of the pane */
@@ -170,14 +171,14 @@ namespace VDEPN {
 
 			/* tries to activate the connection, showing a fancy
 			 * spinner while the Application works in background */
-			activate_connection.clicked.connect ((ev) => {
+			activate_button.clicked.connect ((ev) => {
 					left_pane.remove (inner_buttons_box);
 					left_pane.pack_start (conn_spinner, true, true, 0);
 					left_pane.show_all ();
 					conn_spinner.start ();
 
 					/* Avoid starting multiple threads accidentally */
-					activate_connection.sensitive = false;
+					activate_button.sensitive = false;
 
 					Thread.create<void*> (() => {
 							config.update_configuration (socket_property.get_value (), remote_socket_property.get_value (),
@@ -192,8 +193,14 @@ namespace VDEPN {
 									/* this may throws exceptions */
 									father.connections_manager.new_connection (config);
 									button_status = true;
-									activate_connection.label = _("Deactivate");
+									activate_button.label = _("Deactivate");
 									notificator.conn_active ();
+
+									Gdk.threads_enter ();
+									/* Add a thread that checks if the given connection is still alive every 10 seconds */
+									Timeout.add (Helper.TIMEOUT, () => { return check_if_alive (); });
+
+									Gdk.threads_leave ();
 								}
 
 								/* woah.. something bad happened :( */
@@ -220,9 +227,9 @@ namespace VDEPN {
 
 							/* Deactivate the connection */
 							else {
-								activate_connection.label = _("Activate");
-								father.connections_manager.rm_connection (config.connection_name);
 								button_status = false;
+								activate_button.label = _("Activate");
+								father.connections_manager.rm_connection (config.connection_name);
 								notificator.conn_inactive ();
 							}
 
@@ -237,7 +244,7 @@ namespace VDEPN {
 						}, false);
 
 					/* Make the button sensible to signals again */
-					activate_connection.sensitive = true;
+					activate_button.sensitive = true;
 				});
 
 			show_all ();
@@ -250,12 +257,40 @@ namespace VDEPN {
 			if (pidfile.query_exists (null)) {
 				father.connections_manager.new_connection_from_pid (config);
 				button_status = true;
+				Timeout.add (Helper.TIMEOUT, () => { return check_if_alive (); });
 				return new Button.with_label (_("Deactivate"));
 			}
 			else {
 				button_status = false;
 				return new Button.with_label (_("Activate"));
 			}
+		}
+
+		/* A simple function that checks if a connection is still
+		 * alive and, if the connection is no longer alive, it
+		 * deactivates it */
+		private bool check_if_alive () {
+			Manager.VDEConnection to_be_checked = father.connections_manager.get_connection_from_name (config.connection_name);
+			try {
+				if (to_be_checked.is_alive () && button_status)
+					return true;
+
+				else {
+					button_status = false;
+					activate_button.label = _("Activate");
+					father.connections_manager.rm_connection (config.connection_name);
+					notificator.conn_inactive ();
+					return false;
+				}
+			}
+
+			/* The only exception  which may be thrown is  the one that tells us
+			 * that the connection isn't found in the active connections pool,
+			 * which means that the user has manually deactivated it */
+			catch (Error e) {
+				return false;
+			}
+
 		}
 	}
 }

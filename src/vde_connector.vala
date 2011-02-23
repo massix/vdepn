@@ -115,6 +115,7 @@ namespace VDEPN.Manager {
 
 		/* used internally */
 		private int vde_switch_pid;
+		private int ssh_pid;
 		private string vde_switch_cmd;
 		private string vde_plug2tap_cmd;
 		private string vde_plug_cmd;
@@ -122,17 +123,27 @@ namespace VDEPN.Manager {
 		private string pkexec_cmd;
 		private string pgrep_cmd;
 		private string ifconfig_cmd;
+		private string temp_file;
 
-		/* The connection was already active, just take out the PID
-		 * file and the socket location
-		 * FIXME: get the socket location somehow
-		 */
+		/* The connection was already active, just take out the PIDs and create a new checker script */
 		public VDEConnection.from_pid_file(VDEConfiguration conf) {
 			try {
 				string pidtmp;
+				string checker_script;
 				configuration = conf;
 				GLib.FileUtils.get_contents ("/tmp/vdepn-" + configuration.connection_name + ".pid", out pidtmp);
 				vde_switch_pid = pidtmp.to_int ();
+				GLib.FileUtils.get_contents ("/tmp/vdepn-" + configuration.connection_name + "-ssh.pid", out pidtmp);
+				ssh_pid = pidtmp.to_int ();
+
+				/* Create the checker script */
+				GLib.FileUtils.open_tmp ("vdepn-XXXXXX.sh", out temp_file);
+				checker_script = "#!/bin/sh\n\n";
+				checker_script += "[ $(ps aux | grep -c $(cat /tmp/vdepn-" + configuration.connection_name
+								+ "-ssh.pid)) -gt 1 ] && echo alive || echo dead\n";
+				GLib.FileUtils.set_contents (temp_file, checker_script, -1);
+				GLib.FileUtils.chmod (temp_file, 0700);
+
 			}
 			catch (Error e) {
 				Helper.debug (Helper.TAG_ERROR, e.message);
@@ -148,7 +159,7 @@ namespace VDEPN.Manager {
 			try {
 				string user_script;
 				string root_script;
-				string temp_file;
+				string checker_script;
 				string result;
 				string pre_conn_cmds = replace_variables (conf.pre_conn_cmds);
 				string post_conn_cmds = replace_variables (conf.post_conn_cmds);
@@ -204,6 +215,10 @@ namespace VDEPN.Manager {
 				/* sleep 5 seconds after the connection to see if it fails or not */
 				user_script += "sleep 5\n\n";
 
+				/* ssh connection pid acquiring */
+				user_script += pgrep_cmd + " -fn \"ssh " + ssh_args + " " + configuration.user +
+					"@" + configuration.machine + "\" > /tmp/vdepn-" + configuration.connection_name + "-ssh.pid\n\n";
+
 				/* vde_plug pid acquiring (or script failure) */
 				user_script += pgrep_cmd + " -fn \"" +  local_vde_plug_cmd + "\" > /dev/null || echo VDEPLUGERROR\n\n";
 
@@ -236,6 +251,10 @@ namespace VDEPN.Manager {
 				GLib.FileUtils.get_contents ("/tmp/vdepn-" + configuration.connection_name + ".pid", out pidtmp, null);
 				vde_switch_pid = pidtmp.to_int ();
 
+				/* Grab the ssh PID */
+				GLib.FileUtils.get_contents ("/tmp/vdepn-" + configuration.connection_name + "-ssh.pid", out pidtmp, null);
+				ssh_pid = pidtmp.to_int ();
+
 				/* An error occured while creating the switch, there's no need to cleanup */
 				if (result.chomp () == "VDESWITCHERROR") {
 					GLib.FileUtils.remove (temp_file);
@@ -264,7 +283,13 @@ namespace VDEPN.Manager {
 					Process.spawn_command_line_sync (pkexec_cmd + " " + temp_file, null, null, null);
 				}
 
-				GLib.FileUtils.remove (temp_file);
+				/* Create the checker script */
+				checker_script = "#!/bin/sh\n\n";
+				checker_script += "[ $(ps aux | grep -c $(cat /tmp/vdepn-" + configuration.connection_name
+								+ "-ssh.pid)) -gt 1 ] && echo alive || echo dead\n";
+				GLib.FileUtils.set_contents (temp_file, checker_script, -1);
+				GLib.FileUtils.chmod (temp_file, 0700);
+
 			}
 
 			catch (GLib.Error e) {
@@ -313,8 +338,7 @@ namespace VDEPN.Manager {
 			}
 		}
 
-		/* get the paths for the command that will be used into the
-		 * generated script */
+		/* get the paths for the command that will be used into the generated script */
 		private void get_paths () {
 			string command;
 			string cmd_result;
@@ -363,12 +387,11 @@ namespace VDEPN.Manager {
 		}
 
 		/* Destroy an existing connection, cleaning up the filesystem */
+		/* FIXME: there's a probable race condition between this function and the
+		 * timeout function that checks if a connection is still alive */
 		public bool destroy_connection () {
 			try {
 				string script;
-				string temp_file;
-
-				GLib.FileUtils.open_tmp ("kill-vdepn-XXXXXX.sh", out temp_file);
 
 				script = "#!/bin/sh\n\n";
 				/* Killing the vde_switch brings down every other process */
@@ -378,7 +401,7 @@ namespace VDEPN.Manager {
 				script += "sleep 3\n";
 
 				/* Remove PID file and socket (if retrieved) */
-				script += "rm -f /tmp/vdepn-" + conn_id + ".pid\n";
+				script += "rm -f /tmp/vdepn-" + conn_id + "*.pid\n";
 				if (configuration.socket_path != null && configuration.socket_path.chomp () != "")
 					script += "rm -rf " + configuration.socket_path + "\n";
 
@@ -396,6 +419,20 @@ namespace VDEPN.Manager {
 				Helper.debug (Helper.TAG_ERROR, e.message);
 				return false;
 			}
+		}
+
+		/* Check if a connection is still alive by checking its ssh connection
+		 * This can be done because after every successfully construction of a new object, a script
+		 * is created in /tmp, and its only purpose is to check if the ssh connection is still alive */
+		public bool is_alive () {
+			string result;
+
+			Process.spawn_command_line_sync (temp_file, out result, null, null);
+
+			if (result.contains ("alive"))
+				return true;
+			else
+				return false;
 		}
 	}
 }
