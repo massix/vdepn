@@ -24,4 +24,12 @@ namespace Config {
 	public const string PKGDATADIR;
 	public const string GETTEXT_PACKAGE;
 	public const string LOCALEDIR;
+	public const string PKEXEC_CMD;
+	public const string IFCONFIG_CMD;
+	public const string VDE_SWITCH_CMD;
+	public const string VDE_PLUG_CMD;
+	public const string VDE_PLUG2TAP_CMD;
+	public const string SSH_CMD;
+	public const string PGREP_CMD;
+	public const string DPIPE_CMD;
 }

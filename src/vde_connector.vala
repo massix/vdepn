@@ -116,13 +116,13 @@ namespace VDEPN.Manager {
 		/* used internally */
 		private int vde_switch_pid;
 		private int ssh_pid;
-		private string vde_switch_cmd;
-		private string vde_plug2tap_cmd;
-		private string vde_plug_cmd;
-		private string dpipe_cmd;
-		private string pkexec_cmd;
-		private string pgrep_cmd;
-		private string ifconfig_cmd;
+		private string vde_switch_cmd = Config.VDE_SWITCH_CMD;
+		private string vde_plug2tap_cmd = Config.VDE_PLUG2TAP_CMD;
+		private string vde_plug_cmd = Config.VDE_PLUG_CMD;
+		private string dpipe_cmd = Config.DPIPE_CMD;
+		private string pkexec_cmd = Config.PKEXEC_CMD;
+		private string pgrep_cmd = Config.PGREP_CMD;
+		private string ifconfig_cmd = Config.IFCONFIG_CMD;
 		private string temp_file;
 
 		/* The connection was already active, just take out the PIDs and create a new checker script */
@@ -166,23 +166,6 @@ namespace VDEPN.Manager {
 
 				GLib.FileUtils.open_tmp ("vdepn-XXXXXX.sh", out temp_file);
 				GLib.FileUtils.chmod (temp_file, 0700);
-
-				get_paths ();
-
-				if ((vde_switch_cmd == null) ||
-					(vde_plug_cmd == null) ||
-					(dpipe_cmd == null) ||
-					(vde_plug2tap_cmd == null))
-					throw new ConnectorError.COMMAND_NOT_FOUND (_("VDE not fully installed"));
-
-				if (pkexec_cmd == null)
-					throw new ConnectorError.COMMAND_NOT_FOUND (_("pkexec not found, root unavailable"));
-
-				if (pgrep_cmd == null)
-					throw new ConnectorError.COMMAND_NOT_FOUND (_("pgrep not found, can't kill the switches"));
-
-				if (ifconfig_cmd == null)
-					throw new ConnectorError.COMMAND_NOT_FOUND (_("ifconfig not found, can't set up interface"));
 
 				/* check wether the SSH host accepts us */
 				if (configuration.checkhost && check_ssh_host ()) {
@@ -338,53 +321,6 @@ namespace VDEPN.Manager {
 			}
 		}
 
-		/* get the paths for the command that will be used into the generated script */
-		private void get_paths () {
-			string command;
-			string cmd_result;
-			string[] tmp_split;
-
-			try {
-				command = "whereis vde_switch";
-				Process.spawn_command_line_sync (command, out cmd_result, null, null);
-				tmp_split = cmd_result.split (" ", 0);
-				vde_switch_cmd = tmp_split[1].chomp ();
-
-				command = "whereis vde_plug";
-				Process.spawn_command_line_sync (command, out cmd_result, null, null);
-				tmp_split = cmd_result.split (" ", 0);
-				vde_plug_cmd = tmp_split[1].chomp ();
-
-				command = "whereis vde_plug2tap";
-				Process.spawn_command_line_sync (command, out cmd_result, null, null);
-				tmp_split = cmd_result.split (" ", 0);
-				vde_plug2tap_cmd = tmp_split[1].chomp ();
-
-				command = "whereis dpipe";
-				Process.spawn_command_line_sync (command, out cmd_result, null, null);
-				tmp_split = cmd_result.split (" ", 0);
-				dpipe_cmd = tmp_split[1].chomp ();
-
-				command = "whereis pkexec";
-				Process.spawn_command_line_sync (command, out cmd_result, null, null);
-				tmp_split = cmd_result.split (" ", 0);
-				pkexec_cmd = tmp_split[1].chomp ();
-
-				command = "whereis pgrep";
-				Process.spawn_command_line_sync (command, out cmd_result, null, null);
-				tmp_split = cmd_result.split (" ", 0);
-				pgrep_cmd = tmp_split[1].chomp ();
-
-				command = "whereis ifconfig";
-				Process.spawn_command_line_sync (command, out cmd_result, null, null);
-				tmp_split = cmd_result.split (" ", 0);
-				ifconfig_cmd = tmp_split[1].chomp ();
-			}
-
-			catch (GLib.SpawnError e) {
-				Helper.debug (Helper.TAG_ERROR, e.message);
-			}
-		}
 
 		/* Destroy an existing connection, cleaning up the filesystem */
 		/* FIXME: there's a probable race condition between this function and the

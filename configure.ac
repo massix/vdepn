@@ -17,6 +17,70 @@ AC_PROG_INTLTOOL
 AM_PROG_VALAC($VALA_REQUIRED)
 AC_SUBST(VALAC)
 
+dnl -------------------------------------
+dnl check for programs that will be used
+dnl -------------------------------------
+
+AC_PATH_PROG(PKEXEC, pkexec, no)
+if test "x$PKEXEC" = "xno"; then
+   AC_MSG_ERROR([Can't find pkexec in your path!])
+fi
+AC_DEFINE_UNQUOTED(PKEXEC_CMD, "$PKEXEC", [pkexec command path])
+
+
+AC_PATH_PROG(VDE_SWITCH, vde_switch, no)
+if test "x$VDE_SWITCH" = "xno"; then
+   AC_MSG_ERROR([Can't find vde_switch in your path!])
+fi
+AC_DEFINE_UNQUOTED(VDE_SWITCH_CMD, "$VDE_SWITCH", [vde_switch command path])
+
+
+AC_PATH_PROG(VDE_PLUG, vde_plug, no)
+if test "x$VDE_PLUG" = "xno"; then
+   AC_MSG_ERROR([Can't find vde_plug in your path!])
+fi
+AC_DEFINE_UNQUOTED(VDE_PLUG_CMD, "$VDE_PLUG", [vde_plug command path])
+
+
+AC_PATH_PROG(VDE_PLUG2TAP, vde_plug2tap, no)
+if test "x$VDE_PLUG2TAP" = "xno"; then
+   AC_MSG_ERROR([Can't find vde_plug2tap in your path!])
+fi
+AC_DEFINE_UNQUOTED(VDE_PLUG2TAP_CMD, "$VDE_PLUG2TAP", [vde_plug2tap command path])
+
+
+AC_PATH_PROG(IFCONFIG, ifconfig, no)
+if test "x$IFCONFIG" = "xno"; then
+   AC_MSG_ERROR([Can't find ifconfig in yoru path!])
+fi
+AC_DEFINE_UNQUOTED(IFCONFIG_CMD, "$IFCONFIG", [ifconfig command path])
+
+
+AC_PATH_PROG(SSH, ssh, no)
+if test "x$SSH" = "xno"; then
+   AC_MSG_ERROR([Can't find ssh in your path!])
+fi
+AC_DEFINE_UNQUOTED(SSH_CMD, "$SSH", [ssh command path])
+
+
+AC_PATH_PROG(PGREP, pgrep, no)
+if test "x$PGREP" = "xno"; then
+   AC_MSG_ERROR([Can't find pgrep in your path!])
+fi
+AC_DEFINE_UNQUOTED(PGREP_CMD, "$PGREP", [pgrep command path])
+
+
+AC_PATH_PROG(DPIPE, dpipe, no)
+if test "x$DPIPE" = "xno"; then
+   AC_MSG_ERROR([Can't find dpipe in your path!])
+fi
+AC_DEFINE_UNQUOTED(DPIPE_CMD, "$DPIPE", [dpipe command path])
+
+
+dnl -------------------
+dnl check for libraries
+dnl -------------------
+
 GETTEXT_PACKAGE=vde_manager
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [gettext package])
