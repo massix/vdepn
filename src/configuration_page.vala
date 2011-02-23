@@ -35,7 +35,7 @@ namespace VDEPN {
 		}
 
 		public void conn_active () {
-			body = "Connection " + conn_name + " is now active";
+			body = _("Connection ") + conn_name + _(" is now active");
 			try {
 				show ();
 			}
@@ -45,7 +45,7 @@ namespace VDEPN {
 		}
 
 		public void conn_inactive () {
-			body = "Connection " + conn_name + " is now inactive";
+			body = _("Connection ") + conn_name + _(" is now inactive");
 			try {
 				show ();
 			}
