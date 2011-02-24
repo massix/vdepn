@@ -135,15 +135,6 @@ namespace VDEPN.Manager {
 				vde_switch_pid = pidtmp.to_int ();
 				GLib.FileUtils.get_contents ("/tmp/vdepn-" + configuration.connection_name + "-ssh.pid", out pidtmp);
 				ssh_pid = pidtmp.to_int ();
-
-				/* Create the checker script */
-				GLib.FileUtils.open_tmp ("vdepn-XXXXXX.sh", out temp_file);
-				checker_script = "#!/bin/sh\n\n";
-				checker_script += "[ $(ps aux | grep -c $(cat /tmp/vdepn-" + configuration.connection_name
-								+ "-ssh.pid)) -gt 1 ] && echo alive || echo dead\n";
-				GLib.FileUtils.set_contents (temp_file, checker_script, -1);
-				GLib.FileUtils.chmod (temp_file, 0700);
-
 			}
 			catch (Error e) {
 				Helper.debug (Helper.TAG_ERROR, e.message);
@@ -265,14 +256,6 @@ namespace VDEPN.Manager {
 					GLib.FileUtils.chmod (temp_file, 0700);
 					Process.spawn_command_line_sync (pkexec_cmd + " " + temp_file, null, null, null);
 				}
-
-				/* Create the checker script */
-				checker_script = "#!/bin/sh\n\n";
-				checker_script += "[ $(ps aux | grep -c $(cat /tmp/vdepn-" + configuration.connection_name
-								+ "-ssh.pid)) -gt 1 ] && echo alive || echo dead\n";
-				GLib.FileUtils.set_contents (temp_file, checker_script, -1);
-				GLib.FileUtils.chmod (temp_file, 0700);
-
 			}
 
 			catch (GLib.Error e) {
@@ -357,15 +340,11 @@ namespace VDEPN.Manager {
 			}
 		}
 
-		/* Check if a connection is still alive by checking its ssh connection
-		 * This can be done because after every successfully construction of a new object, a script
-		 * is created in /tmp, and its only purpose is to check if the ssh connection is still alive */
+		/* Check if a connection is still alive by checking its pid in /proc */
 		public bool is_alive () {
-			string result;
+			File pid_dir = File.new_for_path ("/proc/" + ssh_pid.to_string ());
 
-			Process.spawn_command_line_sync (temp_file, out result, null, null);
-
-			if (result.contains ("alive"))
+			if (pid_dir.query_exists (null))
 				return true;
 			else
 				return false;
