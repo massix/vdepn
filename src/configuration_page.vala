@@ -95,7 +95,7 @@ namespace VDEPN {
 			/* chain up to the hpaned constructor */
 			GLib.Object ();
 
-			left_pane = new VBox (true, 0);
+			left_pane = new VBox (false, 5);
 			right_pane = new VBox (false, 30);
 
 			this.config = v;
@@ -106,15 +106,15 @@ namespace VDEPN {
 
 			index = father.conf_list.index (config);
 
-			conn_name_property = new EntryProperty (_("Connection <b>name</b>:"), config.connection_name);
+			conn_name_property = new EntryProperty (_("Connection <b>name</b>"), config.connection_name);
 			conn_name_property.set_editable (false);
 
-			machine_property = new EntryProperty (_("VDE <b>Machine</b>:"), config.machine);
-			machine_port_property = new EntryProperty (_("VDE Machine <b>Port</b>:") , config.port);
-			user_property = new EntryProperty (_("VDE <b>User</b>:") , config.user);
-			socket_property = new EntryProperty (_("<b>Local</b> Socket Path:"), config.socket_path);
-			remote_socket_property = new EntryProperty (_("<b>Remote</b> Socket Path:"), config.remote_socket_path);
-			ipaddr_property = new EntryProperty (_("TUN/TAP <b>IPv4 Address</b>:"), config.ip_address);
+			machine_property = new EntryProperty (_("VDE <b>Machine</b>"), config.machine);
+			machine_port_property = new EntryProperty (_("VDE Machine <b>Port</b>") , config.port);
+			user_property = new EntryProperty (_("VDE <b>User</b>") , config.user);
+			socket_property = new EntryProperty (_("<b>Local</b> Socket Path"), config.socket_path);
+			remote_socket_property = new EntryProperty (_("<b>Remote</b> Socket Path"), config.remote_socket_path);
+			ipaddr_property = new EntryProperty (_("TUN/TAP <b>IPv4 Address</b>"), config.ip_address);
 
 			string value = (config.pre_conn_cmds != null) ? config.pre_conn_cmds : "whoami";
 			pre_conn_cmds = new TextViewProperty (_("<b>Pre-connection</b> commands"), value);
@@ -150,6 +150,8 @@ namespace VDEPN {
 			left_pane.pack_start ((Widget) remote_socket_property, false, false, 0);
 			left_pane.pack_start ((Widget) ipaddr_property, false, false, 0);
 			left_pane.pack_start (checkbuttons_box, false, false, 0);
+			/* This is used as an invisble widget to fill the empty space between the labels and the buttons */
+			left_pane.pack_start (new Label (""), true, false, 0);
 			left_pane.pack_start (inner_buttons_box, false, false, 0);
 
 			pack1 (left_pane, false, false);
