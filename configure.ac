@@ -51,7 +51,7 @@ AC_DEFINE_UNQUOTED(VDE_PLUG2TAP_CMD, "$VDE_PLUG2TAP", [vde_plug2tap command path
 
 AC_PATH_PROG(IFCONFIG, ifconfig, no)
 if test "x$IFCONFIG" = "xno"; then
-   AC_MSG_ERROR([Can't find ifconfig in yoru path!])
+   AC_MSG_ERROR([Can't find ifconfig in your path!])
 fi
 AC_DEFINE_UNQUOTED(IFCONFIG_CMD, "$IFCONFIG", [ifconfig command path])
 
