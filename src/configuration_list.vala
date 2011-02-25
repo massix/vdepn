@@ -113,10 +113,9 @@ namespace VDEPN {
 
 			save_conn_item.activate.connect ((ev) => {
 					int conn_id = conf_pages.get_current_page ();
-					if (conn_id < 0) {
+					if (conn_id < 0)
 						Helper.debug (Helper.TAG_ERROR, "No active page");
-						return;
-					}
+
 					else {
 						ConfigurationPage page = pages_list.nth_data (conn_id);
 						page.config.update_configuration (page.socket_property.get_value (), page.remote_socket_property.get_value (),
@@ -126,6 +125,8 @@ namespace VDEPN {
 														  page.button_checkhost.active, page.button_ssh.active);
 						page.config.store_configuration (conf_holder);
 					}
+
+					return;
 				});
 
 			rm_conn_item.activate.connect ((ev) => {
@@ -142,9 +143,7 @@ namespace VDEPN {
 						confirm.vbox.show_all ();
 						confirm.close.connect ((ev) => { confirm.destroy (); });
 						confirm.response.connect ((ev, resp) => {
-								if (resp == 1)
-									confirm.destroy ();
-								else {
+								if (resp == 0) {
 									VDEConfiguration rem = conf_list.nth_data (conn_id);
 
 									/* remove the configuration page too */
@@ -157,10 +156,14 @@ namespace VDEPN {
 									conf_list.remove (rem);
 									conf_pages.next_page ();
 									conf_pages.remove_page (conn_id);
-									confirm.destroy ();
 								}
+
+								return;
 							});
+
 						confirm.run ();
+
+						confirm.destroy ();
 					}
 				});
 
@@ -181,8 +184,7 @@ namespace VDEPN {
 					new_conf_dialog.add_button (_("Create"), 0);
 					new_conf_dialog.add_button (_("Abort"), 1);
 					new_conf_dialog.vbox.show_all ();
-					new_conf_dialog.close.connect ((ev) => { new_conf_dialog.destroy(); });
-					new_conf_dialog.response.connect ((ev, resp) => {
+					new_conf_dialog.response.connect ((resp) => {
 							if (resp == 0) {
 								VDEConfiguration new_conf = new VDEConfiguration.with_defaults (new_conf_entry.text);
 								ConfigurationPage p = new ConfigurationPage (new_conf, this);
@@ -192,12 +194,14 @@ namespace VDEPN {
 								conf_pages.show_all ();
 								pages_list.append (p);
 								switch_page (new_conf.connection_name);
-								new_conf_dialog.destroy ();
 							}
-							else
-								new_conf_dialog.destroy ();
+
+							return;
 						});
+
 					new_conf_dialog.run ();
+
+					new_conf_dialog.destroy ();
 				});
 
 			exit_item.activate.connect ((ev) => {
@@ -222,15 +226,17 @@ namespace VDEPN {
 					about.program_name = Config.PACKAGE_NAME;
 					about.version = Config.PACKAGE_VERSION;
 					about.website = "http://git.casafamelica.info/vdepn.git";
+
 					try {
 						about.logo = new Gdk.Pixbuf.from_file (Helper.LOGO_PATH);
 					}
 					catch (Error e) {
 						Helper.debug (Helper.TAG_ERROR, "Error while retrieving logo image");
 					}
-					about.close.connect ((ev) => { about.destroy(); });
-					about.response.connect ((ev) => { about.destroy(); });
+
 					about.run ();
+
+					about.destroy ();
 			});
 
 			help_item.submenu = help_menu;
@@ -256,17 +262,18 @@ namespace VDEPN {
 				confirm.add_button (_("Quit anyway"), 0);
 				confirm.add_button (_("Cancel"), 1);
 				confirm.vbox.show_all ();
-				confirm.close.connect ((ev) => { confirm.destroy (); });
-				confirm.response.connect ((ev, resp) => {
-						if (resp == 1)
-							confirm.destroy ();
-						else {
-							Gtk.main_quit ();
-						}
-					});
 
+				confirm.response.connect ((resp) => {
+						if (resp == 0)
+							Gtk.main_quit ();
+						else
+							return;
+					});
 				confirm.run ();
+
+				confirm.destroy ();
 			}
+
 			else
 				Gtk.main_quit ();
 		}
