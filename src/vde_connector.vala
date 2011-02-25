@@ -312,6 +312,10 @@ namespace VDEPN.Manager {
 			try {
 				string script;
 
+				/* if temporary file doesn't exist (we were invoked by the pid file) create a new one */
+				if (!File.new_for_path (temp_file).query_exists (null))
+					GLib.FileUtils.open_tmp ("vdepn-killer-XXXXXX.sh", out temp_file);
+
 				script = "#!/bin/sh\n\n";
 				/* Killing the vde_switch brings down every other process */
 				script += "kill -9 " + vde_switch_pid.to_string () + "\n";
