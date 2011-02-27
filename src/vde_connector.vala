@@ -25,6 +25,18 @@ namespace VDEPN.Manager {
 		DUPLICATE_CONNECTION
 	}
 
+	/* Private set of Exceptions used by the try_root_execution () */
+	private errordomain RootConnector {
+		CONNECTION_SUCCESS,
+		CONNECTION_FAILED
+	}
+
+	private enum RootGainer {
+		PKEXEC,
+		SU,
+		SUDO
+	}
+
 	/* Main class, keeps track of all the active connections, creating
 	 * and destroying them if necessary */
 	public class VDEConnector : GLib.Object {
@@ -254,13 +266,69 @@ namespace VDEPN.Manager {
 					/* Everything went fine: execute root script */
 					GLib.FileUtils.set_contents (temp_file, root_script, -1);
 					GLib.FileUtils.chmod (temp_file, 0700);
-					Process.spawn_command_line_sync (pkexec_cmd + " " + temp_file, null, null, null);
+					try {
+						/* Try the three authentication methods until one is successfull */
+						try_root_execution (temp_file, RootGainer.PKEXEC);
+						try_root_execution (temp_file, RootGainer.SU);
+						try_root_execution (temp_file, RootGainer.SUDO);
+					}
+
+					/* Connection successfull */
+					catch (RootConnector.CONNECTION_SUCCESS e) {
+						return;
+					}
+
+					/* If we are here, something went wrong */
+					catch (RootConnector.CONNECTION_FAILED e) {
+						/* Manage error somehow */
+					}
 				}
 			}
 
 			catch (GLib.Error e) {
 				throw new ConnectorError.CONNECTION_FAILED (e.message);
 			}
+		}
+
+
+		/* This is a small helper function that tries to execute a
+		 * script using the method provided as argument */
+		private void try_root_execution (string file_path, RootGainer method) throws RootConnector {
+			int exit_status = 127;
+			switch (method) {
+			case RootGainer.PKEXEC:
+				string command = pkexec_cmd + " --disable-internal-agent ";
+				Helper.debug (Helper.TAG_DEBUG, "Trying pkexec with " + command);
+				Process.spawn_command_line_sync (command + file_path, null, null, out exit_status);
+				break;
+			case RootGainer.SU:
+				string root_pass_file = GLib.Environment.get_user_config_dir ()
+					+ Helper.PROG_DATA_DIR + "/.rootpass";
+				string command = "su -c '" + file_path + "' < " + root_pass_file;
+
+				if (!File.new_for_path (root_pass_file).query_exists (null)) {
+					/* Find a clean way to ask user for the root password */
+				}
+				else {
+					string new_temp_file;
+					Helper.debug (Helper.TAG_DEBUG, "Trying su with " + command);
+					GLib.FileUtils.open_tmp ("vdepn-XXXXXX.sh", out new_temp_file);
+					GLib.FileUtils.set_contents (new_temp_file, "#!/bin/sh\n" + command + "\n", -1);
+					GLib.FileUtils.chmod (new_temp_file, 0700);
+					Process.spawn_command_line_sync (new_temp_file, null, null, out exit_status);
+					GLib.FileUtils.remove (new_temp_file);
+				}
+
+				break;
+			case RootGainer.SUDO:
+				/* TODO: implement */
+				break;
+			default:
+				break;
+			}
+
+			if (exit_status == 0)
+				throw new RootConnector.CONNECTION_SUCCESS ("Connection successfull");
 		}
 
 		/* build up the pre_conn and post_conn cmds by substituting
