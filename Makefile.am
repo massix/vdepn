@@ -1,1 +1,1 @@
-SUBDIRS=src share po
+SUBDIRS=src share po vapi
