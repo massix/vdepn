@@ -16,4 +16,4 @@ sed -i "s/Version: [0-9].[0-9].[0-9]/Version: ${VERSION}/" ~/rpmbuild/vdepn.spec
 
 rpmbuild -ba ~/rpmbuild/vdepn.spec
 
-su -c 'rpm -Uvh ~/rpmbuild/RPMS/i386/vdepn-$VERSION-1.rpm'
+su -c "rpm -Uvh /home/massi/rpmbuild/RPMS/i386/vdepn-${VERSION}-1.i386.rpm"
