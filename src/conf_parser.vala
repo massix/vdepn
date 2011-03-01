@@ -243,8 +243,6 @@ namespace VDEPN {
 			List<Xml.Node*> connection_node_list = new List<Xml.Node*> ();
 			configurations = new List<VDEConfiguration> ();
 
-			/* init XML parser */
-			Parser.init ();
 			configuration_file = Parser.parse_file (path);
 			root_node = configuration_file->get_root_element ();
 

@@ -30,7 +30,8 @@ vde_manager_SOURCES = \
 			configuration_property.vala \
 			configuration_page.vala \
 			tray_icon.vala \
-			vde_connector.vala
+			vde_connector.vala \
+			preferences.vala
 
 vde_manager_LDFLAGS = \
 			$(GLIB_LIBS) \

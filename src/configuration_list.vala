@@ -240,7 +240,21 @@ namespace VDEPN {
 			});
 
 			help_item.submenu = help_menu;
+
+
+
+			/* Edit menu */
+			Menu edit_menu = new Menu ();
+			ImageMenuItem edit_item = new ImageMenuItem.with_mnemonic (_("_Edit"));
+			ImageMenuItem preferences_item = new ImageMenuItem.from_stock (Gtk.STOCK_PREFERENCES, accel_group);
+			edit_menu.append (preferences_item);
+			edit_item.submenu = edit_menu;
+			preferences_item.add_accelerator ("activate", accel_group,
+											  (uint) 'p', Gdk.ModifierType.CONTROL_MASK,
+											  Gtk.AccelFlags.VISIBLE);
+
 			main_menu.append (file_item);
+			main_menu.append (edit_item);
 			main_menu.append (help_item);
 		}
 

@@ -22,6 +22,7 @@ using Xml;
 
 namespace VDEPN {
 	public class Application : GLib.Object {
+		/* Create a DOM with an empty default configuration */
 		private static Doc default_configuration() {
 			Doc def_conf = new Doc();
 
@@ -66,16 +67,40 @@ namespace VDEPN {
 			return def_conf;
 		}
 
+		/* Create a new Document with the default preferences */
+		private static Doc default_preferences () {
+			Doc def_pref = new Doc ();
+
+			Xml.Node *root_elem = def_pref.new_node(null, "vdepreferences");
+			Xml.Node *root_method_elem = def_pref.new_node(null, "rootmethod");
+
+			def_pref.set_root_element (root_elem);
+
+			root_elem->add_child (root_method_elem);
+
+			/* Choose PKEXEC as the default authentication method */
+			root_method_elem->set_content (Helper.RootGainer.PKEXEC.to_string ());
+
+			return def_pref;
+		}
+
 
 		public static void main (string[] args) {
-			File prog_dir = File.new_for_path (Environment.get_user_config_dir () + Helper.PROG_DATA_DIR);
-			File prog_xml = File.new_for_path (Environment.get_user_config_dir () + Helper.XML_FILE);
+			/* Check for essential files */
+			File prog_dir = File.new_for_path (get_user_config_dir () + Helper.PROG_DATA_DIR);
+			File prog_xml = File.new_for_path (get_user_config_dir () + Helper.XML_FILE);
+			File pref_xml = File.new_for_path (get_user_config_dir () + Helper.XML_PREF_FILE);
 
 			// Configuration dir exists..
 			if (prog_dir.query_exists (null)) {
 				if (!(prog_xml.query_exists (null))) {
 					Doc conf = default_configuration ();
 					conf.save_file (get_user_config_dir () + Helper.XML_FILE);
+				}
+
+				if (!(pref_xml.query_exists (null))) {
+					Doc pref = default_preferences ();
+					pref.save_file (get_user_config_dir () + Helper.XML_PREF_FILE);
 				}
 			}
 
@@ -88,6 +113,9 @@ namespace VDEPN {
 
 			set_application_name ("VDE PN Manager");
 			set_prgname ("VDE PN Manager");
+
+			/* init XML parser */
+			Parser.init ();
 
 			/* Internationalization support */
 			Intl.bindtextdomain (Config.GETTEXT_PACKAGE, Config.LOCALEDIR);
