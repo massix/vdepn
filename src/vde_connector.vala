@@ -283,6 +283,12 @@ namespace VDEPN.Manager {
 						/* Manage error somehow */
 					}
 				}
+
+				/* If we are here, something failed while authenticating, clean up the connection and throw exception */
+				destroy_connection ();
+				GLib.FileUtils.remove (temp_file);
+				throw new ConnectorError.CONNECTION_FAILED (_("Could not gain local root priviledges"));
+
 			}
 
 			catch (GLib.Error e) {
