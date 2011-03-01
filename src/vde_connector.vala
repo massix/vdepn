@@ -31,12 +31,6 @@ namespace VDEPN.Manager {
 		CONNECTION_FAILED
 	}
 
-	private enum RootGainer {
-		PKEXEC,
-		SU,
-		SUDO
-	}
-
 	/* Main class, keeps track of all the active connections, creating
 	 * and destroying them if necessary */
 	public class VDEConnector : GLib.Object {
@@ -268,9 +262,9 @@ namespace VDEPN.Manager {
 					GLib.FileUtils.chmod (temp_file, 0700);
 					try {
 						/* Try the three authentication methods until one is successfull */
-						try_root_execution (temp_file, RootGainer.PKEXEC);
-						try_root_execution (temp_file, RootGainer.SU);
-						try_root_execution (temp_file, RootGainer.SUDO);
+						try_root_execution (temp_file, Helper.RootGainer.PKEXEC);
+						try_root_execution (temp_file, Helper.RootGainer.SU);
+						try_root_execution (temp_file, Helper.RootGainer.SUDO);
 					}
 
 					/* Connection successfull */
@@ -299,15 +293,15 @@ namespace VDEPN.Manager {
 
 		/* This is a small helper function that tries to execute a
 		 * script using the method provided as argument */
-		private void try_root_execution (string file_path, RootGainer method) throws RootConnector {
+		private void try_root_execution (string file_path, Helper.RootGainer method) throws RootConnector {
 			int exit_status = 127;
 			switch (method) {
-			case RootGainer.PKEXEC:
+			case Helper.RootGainer.PKEXEC:
 				string command = pkexec_cmd + " --disable-internal-agent ";
 				Helper.debug (Helper.TAG_DEBUG, "Trying pkexec with " + command);
 				Process.spawn_command_line_sync (command + file_path, null, null, out exit_status);
 				break;
-			case RootGainer.SU:
+			case Helper.RootGainer.SU:
 				string root_pass_file = GLib.Environment.get_user_config_dir ()
 					+ Helper.PROG_DATA_DIR + "/.rootpass";
 				string command = "su -c '" + file_path + "' < " + root_pass_file;
@@ -326,7 +320,7 @@ namespace VDEPN.Manager {
 				}
 
 				break;
-			case RootGainer.SUDO:
+			case Helper.RootGainer.SUDO:
 				/* TODO: implement */
 				break;
 			default:

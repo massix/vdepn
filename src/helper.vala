@@ -21,6 +21,13 @@ using GLib.Environment;
 
 namespace VDEPN {
 	public class Helper : GLib.Object {
+		/* This will be used both in the VDEConnector and in the PreferencesPane */
+		public enum RootGainer {
+			PKEXEC,
+			SU,
+			SUDO
+		}
+
 		public const string TAG_DEBUG = "DEBUG";
 		public const string TAG_ERROR = "ERROR";
 		public const string TAG_WARNING = "WARNING";
@@ -50,8 +57,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """;
 
-		public static void debug(string tag, string message)
-		{
+		public static void debug(string tag, string message) {
 			stdout.printf("[%s] %s\n", tag, message);
 		}
 	}
