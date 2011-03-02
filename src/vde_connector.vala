@@ -1,5 +1,6 @@
 /* VDE PN Manager -- VDE Private Network Manager
  * Copyright (C) 2011 - Massimo Gengarelli <gengarel@cs.unibo.it>
+ *                    - Vincenzo Ferrari   <ferrari@cs.unibo.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
