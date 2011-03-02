@@ -256,6 +256,11 @@ namespace VDEPN {
 											  (uint) 'p', Gdk.ModifierType.CONTROL_MASK,
 											  Gtk.AccelFlags.VISIBLE);
 
+			preferences_item.activate.connect (() => {
+					/* Nothing more than this, since the CustomPreferences class is a Singleton */
+					Preferences.CustomPreferences.get_instance ().show_pane (this);
+				});
+
 			main_menu.append (file_item);
 			main_menu.append (edit_item);
 			main_menu.append (help_item);

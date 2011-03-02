@@ -122,6 +122,9 @@ namespace VDEPN {
 			Intl.bind_textdomain_codeset (Config.GETTEXT_PACKAGE, "UTF-8");
 			Intl.textdomain (Config.GETTEXT_PACKAGE);
 
+			/* Init preferences (it is a singleton) */
+			Preferences.CustomPreferences.get_instance ();
+
 			Gtk.init (ref args);
 			Gdk.threads_init ();
 
