@@ -264,8 +264,11 @@ namespace VDEPN {
 				confirm.vbox.show_all ();
 
 				confirm.response.connect ((resp) => {
-						if (resp == 0)
+						if (resp == 0) {
+							/* Removing all existing connections */
+							connections_manager.rm_all_connections ();
 							Gtk.main_quit ();
+						}
 						else
 							return;
 					});

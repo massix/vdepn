@@ -72,6 +72,15 @@ namespace VDEPN.Manager {
 			 * the caller */
 		}
 
+		/* Removes all existing connections */
+		/* TODO:Check the exception */
+		public void rm_all_connections () {
+			foreach (VDEConnection to_be_removed in active_connections) {
+				to_be_removed.destroy_connection ();
+				active_connections.remove (to_be_removed);
+			}
+		}
+
 		/* Returns the number of currently active connections */
 		public uint count_active_connections () {
 			return active_connections.length ();
