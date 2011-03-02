@@ -271,10 +271,7 @@ namespace VDEPN.Manager {
 					GLib.FileUtils.set_contents (temp_file, root_script, -1);
 					GLib.FileUtils.chmod (temp_file, 0700);
 					try {
-						/* Try the three authentication methods until one is successfull */
-						try_root_execution (temp_file, Helper.RootGainer.PKEXEC);
-						try_root_execution (temp_file, Helper.RootGainer.SU);
-						try_root_execution (temp_file, Helper.RootGainer.SUDO);
+						try_root_execution (temp_file, Preferences.CustomPreferences.get_instance ().root_method);
 					}
 
 					/* Connection successfull */
@@ -284,14 +281,15 @@ namespace VDEPN.Manager {
 
 					/* If we are here, something went wrong */
 					catch (RootConnector.CONNECTION_FAILED e) {
-						/* Manage error somehow */
+						destroy_connection ();
+						GLib.FileUtils.remove (temp_file);
+						throw new ConnectorError.CONNECTION_FAILED (e.message);
 					}
 				}
 
-				/* If we are here, something failed while authenticating, clean up the connection and throw exception */
-				destroy_connection ();
-				GLib.FileUtils.remove (temp_file);
-				throw new ConnectorError.CONNECTION_FAILED (_("Could not gain local root priviledges"));
+				/* Hopefully, we should never get here.. */
+				throw new ConnectorError.CONNECTION_FAILED (_("Something went wrong during execution of the scripts ") +
+															_("close VDEPN and restart"));
 
 			}
 
@@ -331,7 +329,7 @@ namespace VDEPN.Manager {
 
 				break;
 			case Helper.RootGainer.SUDO:
-				/* TODO: implement */
+				throw new RootConnector.CONNECTION_FAILED (_("Authentication method not implemented yet"));
 				break;
 			default:
 				break;
@@ -339,6 +337,8 @@ namespace VDEPN.Manager {
 
 			if (exit_status == 0)
 				throw new RootConnector.CONNECTION_SUCCESS ("Connection successfull");
+			else
+				throw new RootConnector.CONNECTION_FAILED (_("Authentication failed"));
 		}
 
 		/* build up the pre_conn and post_conn cmds by substituting
