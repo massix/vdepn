@@ -115,6 +115,7 @@ namespace VDEPN.Preferences {
 		}
 
 		public PreferencesPane (CustomPreferences instance, Gtk.Window father) {
+			GLib.Object ();
 			set_title (_("Preferences"));
 			set_modal (true);
 			set_transient_for (father);
