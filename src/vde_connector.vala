@@ -305,7 +305,19 @@ namespace VDEPN.Manager {
 			int exit_status = 127;
 			switch (method) {
 			case Helper.RootGainer.PKEXEC:
-				string command = pkexec_cmd + " --disable-internal-agent ";
+				string command;
+				/* Get pkexec version */
+				string version_cmd;
+				string[] version;
+
+				/* This will return something like 'pkexec version 0.96 */
+				Process.spawn_command_line_sync (pkexec_cmd + " --version", out version_cmd, null, null);
+				version = version_cmd.split (" ", 0);
+				if (version[2].to_double () < 0.99)
+					command = pkexec_cmd + " ";
+				else
+					command = pkexec_cmd + " --disable-internal-agent ";
+
 				Helper.debug (Helper.TAG_DEBUG, "Trying pkexec with " + command);
 				Process.spawn_command_line_sync (command + file_path, null, null, out exit_status);
 				break;
