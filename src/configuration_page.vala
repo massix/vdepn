@@ -198,11 +198,12 @@ namespace VDEPN {
 									activate_button.label = _("Deactivate");
 									notificator.conn_active ();
 
-									Gdk.threads_enter ();
-									/* Add a thread that checks if the given connection is still alive every 10 seconds */
-									Timeout.add (Helper.TIMEOUT, () => { return check_if_alive (); });
-
-									Gdk.threads_leave ();
+									/* The following lines lead to a segmentation fault in Debian and Ubuntu */
+									//Gdk.threads_enter ();
+									// /* Add a thread that checks if the given connection is still alive every 10 seconds */
+									//Timeout.add (Helper.TIMEOUT, () => { return check_if_alive (); });
+									//
+									//Gdk.threads_leave ();
 								}
 
 								/* woah.. something bad happened :( */
@@ -259,7 +260,10 @@ namespace VDEPN {
 			if (pidfile.query_exists (null)) {
 				father.connections_manager.new_connection_from_pid (config);
 				button_status = true;
-				Timeout.add (Helper.TIMEOUT, () => { return check_if_alive (); });
+				/* The following lines lead to a segmentation fault in Debian and Ubuntu */
+				//Timeout.add (Helper.TIMEOUT, () => {
+				//		return check_if_alive ();
+				//	});
 				return new Button.with_label (_("Deactivate"));
 			}
 			else {
