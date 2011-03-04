@@ -313,7 +313,7 @@ namespace VDEPN.Manager {
 				/* This will return something like 'pkexec version 0.96 */
 				Process.spawn_command_line_sync (pkexec_cmd + " --version", out version_cmd, null, null);
 				version = version_cmd.split (" ", 0);
-				if (version[2].to_double () < 0.99)
+				if ((float) version[2].to_double () > (float) 0.10)
 					command = pkexec_cmd + " ";
 				else
 					command = pkexec_cmd + " --disable-internal-agent ";
