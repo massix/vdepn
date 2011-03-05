@@ -281,19 +281,27 @@ namespace VDEPN {
 			if (connections_manager.count_active_connections () > 0) {
 				Dialog confirm = new Dialog.with_buttons (_("Active Connections"), this, DialogFlags.MODAL);
 				confirm.vbox.add (new Label (_("There are active connections!")));
-				confirm.add_button (_("Quit anyway"), 0);
-				confirm.add_button (_("Cancel"), 1);
+				confirm.add_buttons (_("Disconnect and quit"), 0,
+									 _("Quit only"), 1,
+									 _("Cancel"), 2);
 				confirm.vbox.show_all ();
 
 				confirm.response.connect ((resp) => {
-						if (resp == 0) {
-							/* Removing all existing connections */
+						switch (resp) {
+						case 0:
+							/* Removes all existing connections */
 							connections_manager.rm_all_connections ();
 							Gtk.main_quit ();
-						}
-						else
+							break;
+						case 1:
+							Gtk.main_quit ();
+							break;
+						default:
 							return;
+							break;
+						}
 					});
+
 				confirm.run ();
 
 				confirm.destroy ();
