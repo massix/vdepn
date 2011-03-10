@@ -22,50 +22,15 @@ using Notify;
 using GLib.Environment;
 
 namespace VDEPN {
-	/* Bubble notifications class */
-	private class VNotification : Notify.Notification {
-		private string conn_name;
-
-		public VNotification (string conn_name) {
-			/* chain up to the default Notification constructor */
-			GLib.Object (summary: "VDE Private Network Manager",
-						 body: "Body",
-						 icon_name: Helper.ICON_PATH);
-			this.conn_name = conn_name;
-		}
-
-		public void conn_active () {
-			body = _("Connection ") + conn_name + _(" is now active");
-			try {
-				show ();
-			}
-			catch (GLib.Error e) {
-				Helper.debug (Helper.TAG_ERROR, "Error while showing notifications: " + e.message);
-			}
-		}
-
-		public void conn_inactive () {
-			body = _("Connection ") + conn_name + _(" is now inactive");
-			try {
-				show ();
-			}
-			catch (GLib.Error e) {
-				Helper.debug (Helper.TAG_ERROR, "Error while showing notifications: " + e.message);
-			}
-		}
-	}
-
 	/* ConfigurationPage, holds an HPaned formed by two VBoxes
 	 * containing all the fields that are necessary to build up a new
 	 * configuration */
 	private class ConfigurationPage : Gtk.HPaned {
-		private ConfigurationsList father;
-		private VNotification notificator;
+		private Manager.VDEConnector connector;
 		private HBox checkbuttons_box;
 		private HBox inner_buttons_box;
 		private VBox left_pane;
 		private VBox right_pane;
-		private Spinner conn_spinner;
 		private Button hide_right_pane_button;
 		private Button activate_button;
 
@@ -78,7 +43,6 @@ namespace VDEPN {
 		public ConfigurationProperty ipaddr_property		{ get; private set; }
 		public ConfigurationProperty machine_port_property	{ get; private set; }
 
-
 		/* advanced properties (right part of the pane) */
 		public ConfigurationProperty pre_conn_cmds			{ get; private set; }
 		public ConfigurationProperty post_conn_cmds			{ get; private set; }
@@ -90,8 +54,14 @@ namespace VDEPN {
 		public bool button_status			{ get; private set; }
 		public int index					{ get; private set; }
 
+		/* Emitted signals */
+		public signal void connection_start (Widget self, string conn_name);
+		public signal void connection_successful (Widget self, string conn_name);
+		public signal void connection_failed (Widget self, string conn_name, string message);
+		public signal void connection_deactivated (Widget self, string conn_name);
+
 		/* Builds a new Notebook Page */
-		public ConfigurationPage (VDEConfiguration v, ConfigurationsList father) {
+		public ConfigurationPage (VDEConfiguration v, int index) {
 			/* chain up to the hpaned constructor */
 			GLib.Object ();
 
@@ -99,12 +69,10 @@ namespace VDEPN {
 			right_pane = new VBox (false, 30);
 
 			this.config = v;
-			this.father = father;
+			this.connector = Manager.VDEConnector.get_instance ();
 			button_status = false;
 
-			notificator = new VNotification (config.connection_name);
-
-			index = father.conf_list.index (config);
+			this.index = index;
 
 			conn_name_property = new EntryProperty (_("Connection <b>name</b>"), config.connection_name);
 			conn_name_property.set_editable (false);
@@ -124,8 +92,6 @@ namespace VDEPN {
 			checkbuttons_box = new HBox (true, 2);
 			button_ssh = new CheckButton.with_label (_("Use SSH keys"));
 			button_checkhost = new CheckButton.with_label (_("Check Host"));
-
-			conn_spinner = new Spinner ();
 
 			checkbuttons_box.pack_start (button_ssh, true, true, 0);
 			checkbuttons_box.pack_start (button_checkhost, true, true, 0);
@@ -174,14 +140,10 @@ namespace VDEPN {
 			/* tries to activate the connection, showing a fancy
 			 * spinner while the Application works in background */
 			activate_button.clicked.connect ((ev) => {
-					left_pane.remove (inner_buttons_box);
-					left_pane.pack_start (conn_spinner, true, true, 0);
-					left_pane.show_all ();
-					conn_spinner.start ();
+					/* Emit the first signal */
+					this.connection_start (this, config.connection_name);
 
-					/* Avoid starting multiple threads accidentally */
-					activate_button.sensitive = false;
-
+					/* Start the Connector instance in background */
 					Thread.create<void*> (() => {
 							config.update_configuration (socket_property.get_value (), remote_socket_property.get_value (),
 														 machine_property.get_value (), machine_port_property.get_value (),
@@ -193,37 +155,19 @@ namespace VDEPN {
 							if (button_status == false) {
 								try {
 									/* this may throws exceptions */
-									father.connections_manager.new_connection (config);
+									connector.new_connection (config);
 									button_status = true;
 									activate_button.label = _("Deactivate");
-									notificator.conn_active ();
-
-									/* The following lines lead to a segmentation fault in Debian and Ubuntu */
-									//Gdk.threads_enter ();
-									// /* Add a thread that checks if the given connection is still alive every 10 seconds */
-									//Timeout.add (Helper.TIMEOUT, () => { return check_if_alive (); });
-									//
-									//Gdk.threads_leave ();
+									/* Everything was fine, emit the successful signal */
+									Gdk.threads_enter ();
+									this.connection_successful (this, config.connection_name);
+									Gdk.threads_leave ();
 								}
 
 								/* woah.. something bad happened :( */
 								catch (Manager.ConnectorError e) {
 									Gdk.threads_enter ();
-									Dialog error_dialog = new Dialog.with_buttons ("Error", father, DialogFlags.MODAL);
-									Label err_label = new Label ("<b>" + e.message + "</b>");
-									err_label.use_markup = true;
-									error_dialog.vbox.add (new Label (_("Error while activating connection")));
-									error_dialog.vbox.add (err_label);
-									error_dialog.add_button (_("Close"), 0);
-									error_dialog.vbox.show_all ();
-									error_dialog.close.connect ((ev) => {
-											error_dialog.destroy ();
-										});
-									error_dialog.response.connect ((ev, resp) => {
-											error_dialog.destroy ();
-										});
-
-									error_dialog.run ();
+									this.connection_failed (this, config.connection_name, e.message);
 									Gdk.threads_leave ();
 								}
 							}
@@ -232,22 +176,14 @@ namespace VDEPN {
 							else {
 								button_status = false;
 								activate_button.label = _("Activate");
-								father.connections_manager.rm_connection (config.connection_name);
-								notificator.conn_inactive ();
+								connector.rm_connection (config.connection_name);
+								Gdk.threads_enter ();
+								this.connection_deactivated (this, config.connection_name);
+								Gdk.threads_leave ();
 							}
 
-							/* it's enough, I hate spinners. BURN'EM WITH FIRE */
-							conn_spinner.stop ();
-							Gdk.threads_enter ();
-							left_pane.remove (conn_spinner);
-							left_pane.pack_start (inner_buttons_box, false, false, 0);
-							left_pane.show_all ();
-							Gdk.threads_leave ();
 							return null;
 						}, false);
-
-					/* Make the button sensible to signals again */
-					activate_button.sensitive = true;
 				});
 
 			show_all ();
@@ -258,12 +194,9 @@ namespace VDEPN {
 		private Button get_button () {
 			File pidfile = File.new_for_path ("/tmp/vdepn-" + config.connection_name + ".pid");
 			if (pidfile.query_exists (null)) {
-				father.connections_manager.new_connection_from_pid (config);
+				connector.new_connection_from_pid (config);
 				button_status = true;
-				/* The following lines lead to a segmentation fault in Debian and Ubuntu */
-				//Timeout.add (Helper.TIMEOUT, () => {
-				//		return check_if_alive ();
-				//	});
+				this.connection_successful (this, config.connection_name);
 				return new Button.with_label (_("Deactivate"));
 			}
 			else {
@@ -275,8 +208,8 @@ namespace VDEPN {
 		/* A simple function that checks if a connection is still
 		 * alive and, if the connection is no longer alive, it
 		 * deactivates it */
-		private bool check_if_alive () {
-			Manager.VDEConnection to_be_checked = father.connections_manager.get_connection_from_name (config.connection_name);
+		public bool check_if_alive () {
+			Manager.VDEConnection to_be_checked = connector.get_connection_from_name (config.connection_name);
 			try {
 				if (to_be_checked.is_alive () && button_status)
 					return true;
@@ -284,8 +217,8 @@ namespace VDEPN {
 				else {
 					button_status = false;
 					activate_button.label = _("Activate");
-					father.connections_manager.rm_connection (config.connection_name);
-					notificator.conn_inactive ();
+					connector.rm_connection (config.connection_name);
+					this.connection_deactivated (this, config.connection_name);
 					return false;
 				}
 			}

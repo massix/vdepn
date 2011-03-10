@@ -21,6 +21,40 @@ using Gtk;
 using GLib.Environment;
 
 namespace VDEPN {
+	/* Bubble notifications class */
+	private class VNotification : Notify.Notification {
+		private string conn_name;
+
+		public VNotification () {
+			/* chain up to the default Notification constructor */
+			GLib.Object (summary: "VDE Private Network Manager",
+						 body: "Body",
+						 icon_name: Helper.ICON_PATH);
+			this.conn_name = conn_name;
+		}
+
+		public void conn_active (string conn_name) {
+			body = _("Connection ") + conn_name + _(" is now active");
+			try {
+				show ();
+			}
+			catch (GLib.Error e) {
+				Helper.debug (Helper.TAG_ERROR, "Error while showing notifications: " + e.message);
+			}
+		}
+
+		public void conn_inactive (string conn_name) {
+			body = _("Connection ") + conn_name + _(" is now inactive");
+			try {
+				show ();
+			}
+			catch (GLib.Error e) {
+				Helper.debug (Helper.TAG_ERROR, "Error while showing notifications: " + e.message);
+			}
+		}
+	}
+
+	/* Main window */
 	public class ConfigurationsList : Gtk.Window {
 		private VBox main_vbox;
 		private Notebook conf_pages;
@@ -28,6 +62,8 @@ namespace VDEPN {
 		private string prg_files = get_user_config_dir () + "/vdepn";
 		private List<ConfigurationPage> pages_list;
 		private AccelGroup accel_group;
+		private VNotification notificator;
+		private Statusbar statusbar;
 
 		public Manager.VDEConnector connections_manager { get; private set; }
 		public VDEParser conf_holder					{ get; private set; }
@@ -44,8 +80,10 @@ namespace VDEPN {
 			main_vbox = new VBox (false, 2);
 			conf_pages = new Notebook ();
 			pages_list = new List<ConfigurationPage> ();
+			notificator = new VNotification ();
+			statusbar = new Statusbar ();
 
-			connections_manager = new Manager.VDEConnector ();
+			connections_manager = Manager.VDEConnector.get_instance ();
 			try {
 				set_icon_from_file (Helper.ICON_PATH);
 			}
@@ -71,15 +109,68 @@ namespace VDEPN {
 
 			conf_list = conf_holder.get_configurations ();
 
+			int index = 0;
 			foreach (VDEConfiguration v in conf_list) {
-				ConfigurationPage p = new ConfigurationPage (v, this);
+				ConfigurationPage p = new ConfigurationPage (v, index++);
 				pages_list.append (p);
 				conf_pages.append_page (p, new Label (v.connection_name));
+
+				/* Attach signals */
+				p.connection_start.connect ((widget, conn_name) => {
+						widget.sensitive = false;
+						statusbar.push (0, _("Changing status of connection ") + conn_name);
+					});
+
+				p.connection_successful.connect ((widget, conn_name) => {
+						statusbar.push (0, _("You are now connected to ") + conn_name);
+						notificator.conn_active (conn_name);
+						widget.sensitive = true;
+						Timeout.add (Helper.TIMEOUT, () => {
+								return ((ConfigurationPage) widget).check_if_alive ();
+							});
+					});
+
+				p.connection_failed.connect ((widget, conn_name, err) => {
+						statusbar.push (0, _("Error while connecting to ") + conn_name);
+
+						/* Show a nice error dialog if something went wrong */
+						Dialog error_dialog = new Dialog.with_buttons ("Error", this, DialogFlags.MODAL);
+						Label err_label = new Label ("<b>" + err + "</b>");
+						err_label.use_markup = true;
+						error_dialog.vbox.add (new Label (_("Error while activating connection")));
+						error_dialog.vbox.add (err_label);
+						error_dialog.add_button (_("Close"), 0);
+						error_dialog.vbox.show_all ();
+						error_dialog.close.connect ((ev) => {
+								error_dialog.destroy ();
+							});
+
+						error_dialog.response.connect ((ev, resp) => {
+								error_dialog.destroy ();
+							});
+
+						error_dialog.run ();
+
+						/* Remove the last two messages from statusbar (Trying to connect and Connection failed) */
+						statusbar.pop (0);
+						statusbar.pop (0);
+
+						widget.sensitive = true;
+					});
+
+				p.connection_deactivated.connect ((widget, conn_name) => {
+						statusbar.push (0, _("You are no longer connected to ") + conn_name);
+						notificator.conn_inactive (conn_name);
+						widget.sensitive = true;
+					});
 			}
 
 			main_vbox.pack_start (main_menu, false, true, 0);
-			main_vbox.pack_end (conf_pages, true, true, 0);
+			main_vbox.pack_start (conf_pages, true, true, 0);
+			main_vbox.pack_start (statusbar, false, false, 0);
 			add (main_vbox);
+
+			statusbar.push (0, "VDEPN Does Extend Private Networking. " + _("Welcome, mate!"));
 			show_all ();
 		}
 
@@ -187,7 +278,7 @@ namespace VDEPN {
 					new_conf_dialog.response.connect ((resp) => {
 							if (resp == 0) {
 								VDEConfiguration new_conf = new VDEConfiguration.with_defaults (new_conf_entry.text);
-								ConfigurationPage p = new ConfigurationPage (new_conf, this);
+								ConfigurationPage p = new ConfigurationPage (new_conf, (int) pages_list.length () + 1);
 								conf_list.append (new_conf);
 								new_conf.store_configuration (conf_holder);
 								conf_pages.append_page (p, new Label (new_conf.connection_name));

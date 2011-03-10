@@ -33,12 +33,21 @@ namespace VDEPN.Manager {
 	}
 
 	/* Main class, keeps track of all the active connections, creating
-	 * and destroying them if necessary */
+	 * and destroying them if necessary, this is a Singleton */
 	public class VDEConnector : GLib.Object {
 		private List<VDEConnection> active_connections;
+		private static VDEConnector instance;
 
-		public VDEConnector () {
+		private VDEConnector () {
 			active_connections = new List<VDEConnection> ();
+		}
+
+		/* Get the active instance of the Connector */
+		public static VDEConnector get_instance () {
+			if (instance == null)
+				instance = new VDEConnector ();
+
+			return instance;
 		}
 
 		/* Builds up a new connection using an existing PID file */
