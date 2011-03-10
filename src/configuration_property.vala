@@ -49,7 +49,7 @@ namespace VDEPN {
 
 
 		public EntryProperty (string label, string start_value) {
-			GLib.Object (homogeneous: true, spacing: 0);
+			GLib.Object (homogeneous: true, spacing: 15);
 
 			entry_value = new Entry ();
 			label_value = new Label (label);

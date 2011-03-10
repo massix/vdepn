@@ -25,7 +25,7 @@ namespace VDEPN {
 	/* ConfigurationPage, holds an HPaned formed by two VBoxes
 	 * containing all the fields that are necessary to build up a new
 	 * configuration */
-	private class ConfigurationPage : Gtk.HPaned {
+	private class ConfigurationPage : Gtk.HBox {
 		private Manager.VDEConnector connector;
 		private HBox checkbuttons_box;
 		private HBox inner_buttons_box;
@@ -63,7 +63,7 @@ namespace VDEPN {
 		/* Builds a new Notebook Page */
 		public ConfigurationPage (VDEConfiguration v, int index) {
 			/* chain up to the hpaned constructor */
-			GLib.Object ();
+			GLib.Object (homogeneous: false, spacing: 15);
 
 			left_pane = new VBox (false, 5);
 			right_pane = new VBox (false, 30);
@@ -118,16 +118,16 @@ namespace VDEPN {
 			left_pane.pack_start ((Widget) ipaddr_property, false, false, 0);
 			left_pane.pack_start (checkbuttons_box, false, false, 0);
 			/* This is used as an invisble widget to fill the empty space between the labels and the buttons */
-			left_pane.pack_start (new Label (""), true, false, 0);
+			left_pane.pack_start (new Alignment (0, 0, 0, 0), true, false, 0);
 			left_pane.pack_start (inner_buttons_box, false, false, 0);
 
-			pack1 (left_pane, false, false);
+			pack_start (left_pane, false, false, 0);
 
 			/* right part of the pane */
 			right_pane.pack_start ((Widget) pre_conn_cmds, true, true, 0);
 			right_pane.pack_start ((Widget) post_conn_cmds, true, true, 0);
 
-			pack2 (right_pane, true, true);
+			pack_start (right_pane, true, true, 0);
 
 			/* tries to activate the connection, showing a fancy
 			 * spinner while the Application works in background */
