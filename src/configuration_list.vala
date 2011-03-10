@@ -114,55 +114,7 @@ namespace VDEPN {
 				ConfigurationPage p = new ConfigurationPage (v, index++);
 				pages_list.append (p);
 				conf_pages.append_page (p, new Label (v.connection_name));
-
-				/* Attach signals */
-				p.connection_start.connect ((widget, conn_name) => {
-						widget.sensitive = false;
-						statusbar.push (0, _("Changing status of connection ") + conn_name);
-					});
-
-				p.connection_successful.connect ((widget, conn_name) => {
-						statusbar.push (0, _("You are now connected to ") + conn_name);
-						notificator.conn_active (conn_name);
-						widget.sensitive = true;
-						Timeout.add (Helper.TIMEOUT, () => {
-								return ((ConfigurationPage) widget).check_if_alive ();
-							});
-					});
-
-				p.connection_failed.connect ((widget, conn_name, err) => {
-						statusbar.push (0, _("Error while connecting to ") + conn_name);
-
-						/* Show a nice error dialog if something went wrong */
-						Dialog error_dialog = new Dialog.with_buttons ("Error", this, DialogFlags.MODAL);
-						Label err_label = new Label ("<b>" + err + "</b>");
-						err_label.use_markup = true;
-						error_dialog.vbox.add (new Label (_("Error while activating connection")));
-						error_dialog.vbox.add (err_label);
-						error_dialog.add_button (_("Close"), 0);
-						error_dialog.vbox.show_all ();
-						error_dialog.close.connect ((ev) => {
-								error_dialog.destroy ();
-							});
-
-						error_dialog.response.connect ((ev, resp) => {
-								error_dialog.destroy ();
-							});
-
-						error_dialog.run ();
-
-						/* Remove the last two messages from statusbar (Trying to connect and Connection failed) */
-						statusbar.pop (0);
-						statusbar.pop (0);
-
-						widget.sensitive = true;
-					});
-
-				p.connection_deactivated.connect ((widget, conn_name) => {
-						statusbar.push (0, _("You are no longer connected to ") + conn_name);
-						notificator.conn_inactive (conn_name);
-						widget.sensitive = true;
-					});
+				attach_signals (p);
 			}
 
 			main_vbox.pack_start (main_menu, false, true, 0);
@@ -172,6 +124,59 @@ namespace VDEPN {
 
 			statusbar.push (0, "VDEPN Does Extend Private Networking. " + _("Welcome, mate!"));
 			show_all ();
+		}
+
+
+		/* Attach signals */
+		private void attach_signals (ConfigurationPage p) {
+			p.connection_start.connect ((widget, conn_name) => {
+					widget.sensitive = false;
+					statusbar.push (0, _("Changing status of connection ") + conn_name);
+				});
+
+			p.connection_successful.connect ((widget, conn_name) => {
+					statusbar.push (0, _("You are now connected to ") + conn_name);
+					notificator.conn_active (conn_name);
+					widget.sensitive = true;
+					Timeout.add (Helper.TIMEOUT, () => {
+							return ((ConfigurationPage) widget).check_if_alive ();
+						});
+				});
+
+			p.connection_failed.connect ((widget, conn_name, err) => {
+					statusbar.push (0, _("Error while connecting to ") + conn_name);
+
+					/* Show a nice error dialog if something went wrong */
+					Dialog error_dialog = new Dialog.with_buttons ("Error", this, DialogFlags.MODAL);
+					Label err_label = new Label ("<b>" + err + "</b>");
+					err_label.use_markup = true;
+					error_dialog.vbox.add (new Label (_("Error while activating connection")));
+					error_dialog.vbox.add (err_label);
+					error_dialog.add_button (_("Close"), 0);
+					error_dialog.vbox.show_all ();
+					error_dialog.close.connect ((ev) => {
+							error_dialog.destroy ();
+						});
+
+					error_dialog.response.connect ((ev, resp) => {
+							error_dialog.destroy ();
+						});
+
+					error_dialog.run ();
+
+					/* Remove the last two messages from statusbar (Trying to connect and Connection failed) */
+					statusbar.pop (0);
+					statusbar.pop (0);
+
+					widget.sensitive = true;
+				});
+
+			p.connection_deactivated.connect ((widget, conn_name) => {
+					statusbar.push (0, _("You are no longer connected to ") + conn_name);
+					notificator.conn_inactive (conn_name);
+					widget.sensitive = true;
+				});
+
 		}
 
 		private void build_menubar () {
@@ -284,6 +289,7 @@ namespace VDEPN {
 								conf_pages.append_page (p, new Label (new_conf.connection_name));
 								conf_pages.show_all ();
 								pages_list.append (p);
+								attach_signals (p);
 								switch_page (new_conf.connection_name);
 							}
 
