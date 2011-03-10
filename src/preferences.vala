@@ -27,6 +27,8 @@ namespace VDEPN.Preferences {
 
 		/* Various preferences */
 		public Helper.RootGainer root_method { get; set; }
+		public bool management_mode { get; set; }
+		public string terminal { get; set; }
 
 		/* Parse the preferences for the first time */
 		private CustomPreferences () {
@@ -34,6 +36,11 @@ namespace VDEPN.Preferences {
 			string xml_file_path = GLib.Environment.get_user_config_dir () + Helper.XML_PREF_FILE;
 			Xml.Node *root_node;
 			Xml.Node *pref_node;
+
+			/* Set default values */
+			terminal = "gnome-terminal";
+			management_mode = false;
+			root_method = Helper.RootGainer.PKEXEC;
 
 			/* Load the file */
 			xml_file_doc = Parser.parse_file (xml_file_path);
@@ -57,6 +64,15 @@ namespace VDEPN.Preferences {
 					else
 						root_method = Helper.RootGainer.PKEXEC;
 
+					break;
+				case "management":
+					if (pref_node->get_content () == "true")
+						management_mode = true;
+					else
+						management_mode = false;
+					break;
+				case "terminal":
+					terminal = pref_node->get_content ();
 					break;
 				default:
 					Helper.debug (Helper.TAG_ERROR, "[Preferences] Unrecognized element " + pref_node->name);
@@ -91,8 +107,18 @@ namespace VDEPN.Preferences {
 			Xml.Node *root_method_node = new Xml.Node (null, "rootmethod");
 			root_method_node->set_content (root_method.to_string ());
 
+			/* Create the management switch (default off) */
+			Xml.Node *management_node = new Xml.Node (null, "management");
+			management_node->set_content (management_mode.to_string ());
+
+			/* Terminal */
+			Xml.Node *terminal_node = new Xml.Node (null, "terminal");
+			terminal_node->set_content (terminal);
+
 			/* Create the DOM */
 			root_node->add_child (root_method_node);
+			root_node->add_child (management_node);
+			root_node->add_child (terminal_node);
 
 			/* Store it */
 			new_preferences.save_file (Environment.get_user_config_dir () + Helper.XML_PREF_FILE);
@@ -102,11 +128,15 @@ namespace VDEPN.Preferences {
 	/* This is the actual dialog which shows up the preferences and let the user modify'em */
 	private class PreferencesPane : Gtk.Dialog {
 		private Frame root_method_container;
+		private Frame management_container;
 		private unowned SList<RadioButton> root_method_list;
 		private VBox radio_buttons_container;
+		private VBox management_vbox;
 		private RadioButton radio_pkexec;
 		private RadioButton radio_su;
 		private RadioButton radio_sudo;
+		private ConfigurationProperty default_terminal;
+		private CheckButton management_mode;
 
 		private enum Response {
 			SAVE,
@@ -129,6 +159,17 @@ namespace VDEPN.Preferences {
 			radio_sudo = new RadioButton.with_label_from_widget (radio_pkexec, _("Use sudo to authenticate"));
 			radio_su = new RadioButton.with_label_from_widget (radio_sudo, _("Use su to authenticate"));
 
+			/* Create the Management frame */
+			management_vbox = new VBox (false, 2);
+			management_container = new Frame (_("Management mode"));
+			default_terminal = new EntryProperty (_("Default terminal"), instance.terminal);
+			management_mode = new CheckButton.with_label (_("Create management switchs"));
+			management_mode.active = instance.management_mode;
+			/* Pack the widgets into a VBox and pack the VBox into the frame */
+			management_vbox.pack_start ((Widget) default_terminal, false, false, 0);
+			management_vbox.pack_start (management_mode, false, false, 0);
+			management_container.add (management_vbox);
+
 			/* Set the loaded root method as active */
 			switch (instance.root_method) {
 				case Helper.RootGainer.PKEXEC:
@@ -150,8 +191,9 @@ namespace VDEPN.Preferences {
 			/* Pack the VBOX inside the frame */
 			root_method_container.add (radio_buttons_container);
 
-			/* Pack the Frame into the Dialog's vbox */
+			/* Pack everything into the Dialog's vbox */
 			vbox.add (root_method_container);
+			vbox.add (management_container);
 
 			/* Add three action buttons to the dialog */
 			add_buttons (_("Save preferences"), Response.SAVE,
@@ -163,6 +205,8 @@ namespace VDEPN.Preferences {
 					switch (resp) {
 						case Response.SAVE:
 							instance.root_method = get_method_from_list (radio_pkexec.get_group ());
+							instance.management_mode = management_mode.active;
+							instance.terminal = default_terminal.get_value ();
 							instance.save_file ();
 						break;
 						case Response.CLOSE_NO_SAVE:
@@ -170,6 +214,8 @@ namespace VDEPN.Preferences {
 						break;
 						case Response.SESSION_ONLY:
 							instance.root_method = get_method_from_list (radio_pkexec.get_group ());
+							instance.management_mode = management_mode.active;
+							instance.terminal = default_terminal.get_value ();
 						break;
 						default:
 							/* Do nothing */

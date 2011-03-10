@@ -177,6 +177,7 @@ namespace VDEPN.Manager {
 				string root_script;
 				string checker_script;
 				string result;
+				string vde_switch_pars;
 				string pre_conn_cmds = replace_variables (conf.pre_conn_cmds);
 				string post_conn_cmds = replace_variables (conf.post_conn_cmds);
 
@@ -199,8 +200,15 @@ namespace VDEPN.Manager {
 				/* User part of the script */
 				user_script = "#!/bin/sh\n\n";
 
+				/* Options for vde_switch */
+				vde_switch_pars = " -d -s " + configuration.socket_path;
+				if (Preferences.CustomPreferences.get_instance ().management_mode)
+					vde_switch_pars +=  " -M " + configuration.socket_path + ".mgmt";
+
+				vde_switch_pars += " ";
+
 				/* vde_switch creation */
-				user_script += vde_switch_cmd + " -d -s " + configuration.socket_path + " || (echo VDESWITCHERROR && exit 255)\n";
+				user_script += vde_switch_cmd + vde_switch_pars + " || (echo VDESWITCHERROR && exit 255)\n";
 
 				/* vde_switch pid acquiring */
 				user_script += pgrep_cmd + " -n vde_switch > /tmp/vdepn-" + configuration.connection_name + ".pid\n";

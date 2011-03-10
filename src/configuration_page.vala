@@ -31,7 +31,7 @@ namespace VDEPN {
 		private HBox inner_buttons_box;
 		private VBox left_pane;
 		private VBox right_pane;
-		private Button hide_right_pane_button;
+		private Button manage_button;
 		private Button activate_button;
 
 		/* read-only properties (left part of the pane) */
@@ -100,12 +100,13 @@ namespace VDEPN {
 			button_checkhost.active = config.checkhost;
 
 			inner_buttons_box = new HBox (true, 4);
-			hide_right_pane_button = new Button.with_label (_("Hide Advanced"));
+			manage_button = new Button.with_label (_("Manage Switch"));
+			manage_button.sensitive = false;
 
 			activate_button = get_button ();
 
 			inner_buttons_box.pack_start (activate_button, true, true, 0);
-			inner_buttons_box.pack_start (hide_right_pane_button, true, true, 0);
+			inner_buttons_box.pack_start (manage_button, true, true, 0);
 
 			/* left part of the pane */
 			left_pane.pack_start ((Widget) conn_name_property, false, false, 0);
@@ -127,15 +128,6 @@ namespace VDEPN {
 			right_pane.pack_start ((Widget) post_conn_cmds, true, true, 0);
 
 			pack2 (right_pane, true, true);
-
-			/* Signals */
-
-			/* Hide and shows the right part of the paned */
-			hide_right_pane_button.clicked.connect (() => {
-					get_child2 ().visible = !get_child2 ().visible;
-					hide_right_pane_button.label = get_child2 ().visible ? _("Hide Advanced") : _("Show Advanced");
-				});
-
 
 			/* tries to activate the connection, showing a fancy
 			 * spinner while the Application works in background */
@@ -161,6 +153,7 @@ namespace VDEPN {
 									/* Everything was fine, emit the successful signal */
 									Gdk.threads_enter ();
 									this.connection_successful (this, config.connection_name);
+									manage_button.sensitive = Preferences.CustomPreferences.get_instance ().management_mode;
 									Gdk.threads_leave ();
 								}
 
@@ -179,11 +172,18 @@ namespace VDEPN {
 								connector.rm_connection (config.connection_name);
 								Gdk.threads_enter ();
 								this.connection_deactivated (this, config.connection_name);
+								manage_button.sensitive = false;
 								Gdk.threads_leave ();
 							}
 
 							return null;
 						}, false);
+				});
+
+			/* Open up a terminal showing the unixterm for the switch */
+			manage_button.clicked.connect (() => {
+					string terminal = Preferences.CustomPreferences.get_instance ().terminal;
+					Process.spawn_command_line_async (terminal + " -e 'unixterm " + socket_property.get_value () + ".mgmt'");
 				});
 
 			show_all ();
