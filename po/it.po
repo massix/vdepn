@@ -53,21 +53,25 @@ msgstr "<b>Indirizzo IPv4</b> TUN/TAP:"
 
 #: ../src/configuration_page.vala:229 ../src/configuration_page.vala:119
 #: ../src/configuration_page.vala:120 ../src/configuration_page.vala:88
+#: ../src/configuration_page.vala:92
 msgid "<b>Pre-connection</b> commands"
 msgstr "Comandi <b>Pre-connessione</b>"
 
 #: ../src/configuration_page.vala:231 ../src/configuration_page.vala:121
 #: ../src/configuration_page.vala:122 ../src/configuration_page.vala:90
+#: ../src/configuration_page.vala:94
 msgid "<b>Post-connection</b> commands"
 msgstr "Comandi <b>Post-connessione</b>"
 
 #: ../src/configuration_page.vala:234 ../src/configuration_page.vala:124
 #: ../src/configuration_page.vala:125 ../src/configuration_page.vala:93
+#: ../src/configuration_page.vala:97
 msgid "Use SSH keys"
 msgstr "Usa chiavi SSH"
 
 #: ../src/configuration_page.vala:235 ../src/configuration_page.vala:125
 #: ../src/configuration_page.vala:126 ../src/configuration_page.vala:94
+#: ../src/configuration_page.vala:98
 msgid "Check Host"
 msgstr "Controlla Host"
 
@@ -88,6 +92,7 @@ msgstr "Mostra avanzate"
 #: ../src/configuration_page.vala:196 ../src/configuration_page.vala:261
 #: ../src/configuration_page.vala:198 ../src/configuration_page.vala:263
 #: ../src/configuration_page.vala:152 ../src/configuration_page.vala:200
+#: ../src/configuration_page.vala:161 ../src/configuration_page.vala:219
 msgid "Deactivate"
 msgstr "Disattiva"
 
@@ -109,7 +114,8 @@ msgstr "Chiudi"
 #: ../src/configuration_page.vala:280 ../src/configuration_page.vala:233
 #: ../src/configuration_page.vala:267 ../src/configuration_page.vala:282
 #: ../src/configuration_page.vala:171 ../src/configuration_page.vala:204
-#: ../src/configuration_page.vala:219
+#: ../src/configuration_page.vala:219 ../src/configuration_page.vala:181
+#: ../src/configuration_page.vala:238
 msgid "Activate"
 msgstr "Attiva"
 
@@ -209,29 +215,29 @@ msgstr "ifconfig non trovato, non posso impostare l'interfaccia"
 
 #: ../src/vde_connector.vala:228 ../src/vde_connector.vala:242
 #: ../src/vde_connector.vala:261 ../src/vde_connector.vala:247
-#: ../src/vde_connector.vala:268
+#: ../src/vde_connector.vala:268 ../src/vde_connector.vala:295
 msgid "Failure while creating the local switch"
 msgstr "Errore nel tentativo di creazione dello switch locale"
 
 #: ../src/vde_connector.vala:236 ../src/vde_connector.vala:250
 #: ../src/vde_connector.vala:269 ../src/vde_connector.vala:255
-#: ../src/vde_connector.vala:276
+#: ../src/vde_connector.vala:276 ../src/vde_connector.vala:303
 msgid "Failure, remote socket closed connection"
 msgstr "Errore, il socket remoto ha chiuso la connessione"
 
 #: ../src/vde_connector.vala:243 ../src/vde_connector.vala:257
 #: ../src/vde_connector.vala:276 ../src/vde_connector.vala:262
-#: ../src/vde_connector.vala:283
+#: ../src/vde_connector.vala:283 ../src/vde_connector.vala:310
 msgid "Failure while executing the pre-connection commands"
 msgstr "Errore durante l'esecuzione dei comandi di pre-connessione"
 
 #: ../src/vde_connector.vala:55 ../src/vde_connector.vala:67
-#: ../src/vde_connector.vala:71
+#: ../src/vde_connector.vala:71 ../src/vde_connector.vala:74
 msgid "Duplicate connection found in the pool of active connections"
 msgstr "Trovato un duplicato di connessione nel pool delle connessioni attive"
 
 #: ../src/vde_connector.vala:93 ../src/vde_connector.vala:105
-#: ../src/vde_connector.vala:118
+#: ../src/vde_connector.vala:118 ../src/vde_connector.vala:121
 msgid "Connection not found in the active connections pool"
 msgstr "Connessione non trovata nel pool delle connessioni attive"
 
@@ -249,30 +255,37 @@ msgid " is now inactive"
 msgstr " è ora inattiva"
 
 #: ../src/configuration_page.vala:109 ../src/configuration_page.vala:77
+#: ../src/configuration_page.vala:81
 msgid "Connection <b>name</b>"
 msgstr "<b>Nome</b> Connessione"
 
 #: ../src/configuration_page.vala:112 ../src/configuration_page.vala:80
+#: ../src/configuration_page.vala:84
 msgid "VDE <b>Machine</b>"
 msgstr "<b>Macchina</b> VDE"
 
 #: ../src/configuration_page.vala:113 ../src/configuration_page.vala:81
+#: ../src/configuration_page.vala:85
 msgid "VDE Machine <b>Port</b>"
 msgstr "<b>Porta</b> Macchina VDE"
 
 #: ../src/configuration_page.vala:114 ../src/configuration_page.vala:82
+#: ../src/configuration_page.vala:86
 msgid "VDE <b>User</b>"
 msgstr "<b>Utente</b> VDE"
 
 #: ../src/configuration_page.vala:115 ../src/configuration_page.vala:83
+#: ../src/configuration_page.vala:87
 msgid "<b>Local</b> Socket Path"
 msgstr "Percorso Socket <b>Locale</b>"
 
 #: ../src/configuration_page.vala:116 ../src/configuration_page.vala:84
+#: ../src/configuration_page.vala:88
 msgid "<b>Remote</b> Socket Path"
 msgstr "Percorso Socket <b>Remota</b>"
 
 #: ../src/configuration_page.vala:117 ../src/configuration_page.vala:85
+#: ../src/configuration_page.vala:89
 msgid "TUN/TAP <b>IPv4 Address</b>"
 msgstr "<b>Indirizzo IPv4</b> TUN/TAP"
 
@@ -312,7 +325,7 @@ msgstr "Disconnetti ed esci"
 msgid "Quit only"
 msgstr "Esci solamente"
 
-#: ../src/configuration_page.vala:103
+#: ../src/configuration_page.vala:103 ../src/configuration_page.vala:107
 msgid "Manage Switch"
 msgstr "Gestisci Switch"
 
@@ -360,18 +373,54 @@ msgstr "Salva per questa sessione"
 msgid "Close without saving"
 msgstr "Chiudi senza salvare"
 
-#: ../src/vde_connector.vala:308
+#: ../src/vde_connector.vala:308 ../src/vde_connector.vala:337
 msgid "Something went wrong during execution of the scripts "
 msgstr "Qualcosa è andato storto durante l'esecuzione degli scripts "
 
-#: ../src/vde_connector.vala:309
+#: ../src/vde_connector.vala:309 ../src/vde_connector.vala:338
 msgid "close VDEPN and restart"
 msgstr "chiudi VDEPN e ricomincia"
 
-#: ../src/vde_connector.vala:361
+#: ../src/vde_connector.vala:361 ../src/vde_connector.vala:390
 msgid "Authentication method not implemented yet"
 msgstr "Metodo di autenticazione non ancora implementato"
 
-#: ../src/vde_connector.vala:370
+#: ../src/vde_connector.vala:370 ../src/vde_connector.vala:399
 msgid "Authentication failed"
 msgstr "Autenticazione fallita"
+
+#: ../src/configuration_page.vala:218 ../src/vde_connector.vala:324
+msgid "Done!"
+msgstr "Fatto!"
+
+#: ../src/vde_connector.vala:203
+msgid "Checking ssh host"
+msgstr "Controllo l'host ssh"
+
+#: ../src/vde_connector.vala:207
+msgid "Host accepted us!"
+msgstr "L'host ci ha accettati!"
+
+#: ../src/vde_connector.vala:210
+msgid "Creating user script"
+msgstr "Creo lo script utente"
+
+#: ../src/vde_connector.vala:254
+msgid "Creating root script"
+msgstr "Creo lo script root"
+
+#: ../src/vde_connector.vala:274
+msgid "Executing user script"
+msgstr "Eseguo lo script utente"
+
+#: ../src/vde_connector.vala:315
+msgid "Executing root script"
+msgstr "Eseguo lo script root"
+
+#: ../src/vde_connector.vala:454
+msgid "Disconnecting"
+msgstr "Disconnessione"
+
+#: ../src/vde_connector.vala:483
+msgid "Cleaning"
+msgstr "Pulizia"
