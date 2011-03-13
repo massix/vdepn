@@ -38,6 +38,9 @@ namespace VDEPN.Manager {
 		private List<VDEConnection> active_connections;
 		private static VDEConnector instance;
 
+		/* Signals */
+		public signal void connection_step (double step, string caption);
+
 		private VDEConnector () {
 			active_connections = new List<VDEConnection> ();
 		}
@@ -173,6 +176,11 @@ namespace VDEPN.Manager {
 		/* creates a new connection with the given configuration,
 		 * throwing an exception if it fails for some reason */
 		public VDEConnection (VDEConfiguration conf) throws ConnectorError {
+			/* Used only to send signals */
+			VDEConnector connector = VDEConnector.get_instance ();
+
+			connector.connection_step (0.1, null);
+
 			configuration = conf;
 			conn_id = conf.connection_name;
 			preferences = Preferences.CustomPreferences.get_instance ();
@@ -189,11 +197,17 @@ namespace VDEPN.Manager {
 				GLib.FileUtils.open_tmp ("vdepn-XXXXXX.sh", out temp_file);
 				GLib.FileUtils.chmod (temp_file, 0700);
 
+
 				/* check wether the SSH host accepts us */
+				if (configuration.checkhost)
+					connector.connection_step (0.3, _("Checking ssh host"));
 				if (configuration.checkhost && check_ssh_host ()) {
 					if (ex_status > 0 || ex_status < 0)
 						throw new ConnectorError.CONNECTION_FAILED (check_host_stderr);
+					connector.connection_step (0.4, _("Host accepted us!"));
 				}
+
+				connector.connection_step (0.5, _("Creating user script"));
 
 				/* Build up the two vde_plug cmds (local and remote) */
 				string remote_vde_plug_cmd = "vde_plug";
@@ -237,6 +251,7 @@ namespace VDEPN.Manager {
 				/* execute pre connection commands */
 				user_script += pre_conn_cmds + "\n\n";
 
+				connector.connection_step (0.6, _("Creating root script"));
 
 				/* Privileged (root) part of the script */
 				root_script = "#!/bin/sh\n\n";
@@ -256,10 +271,14 @@ namespace VDEPN.Manager {
 				/* safely exit from the subshell */
 				root_script += "exit 0\n";
 
+				connector.connection_step (0.7, _("Executing user script"));
+
 				/* Execute user script */
 				GLib.FileUtils.set_contents (temp_file, user_script, -1);
 				GLib.FileUtils.chmod (temp_file, 0700);
 				Process.spawn_command_line_sync (temp_file, out result, null, null);
+
+				connector.connection_step (0.8, null);
 
 				/* Grab the vde_switch PID */
 				string pidtmp;
@@ -293,6 +312,7 @@ namespace VDEPN.Manager {
 
 				else {
 					/* Everything went fine: execute root script */
+					connector.connection_step (0.9, _("Executing root script"));
 					GLib.FileUtils.set_contents (temp_file, root_script, -1);
 					GLib.FileUtils.chmod (temp_file, 0700);
 					try {
@@ -301,6 +321,7 @@ namespace VDEPN.Manager {
 
 					/* Connection successfull */
 					catch (RootConnector.CONNECTION_SUCCESS e) {
+						connector.connection_step (1, _("Done!"));
 						return;
 					}
 
@@ -424,8 +445,13 @@ namespace VDEPN.Manager {
 		/* FIXME: there's a probable race condition between this function and the
 		 * timeout function that checks if a connection is still alive */
 		public bool destroy_connection () {
+			/* Used to send signals */
+			VDEConnector connector = VDEConnector.get_instance ();
+
 			try {
 				string script;
+
+				connector.connection_step (0.7, _("Disconnecting"));
 
 				/* if temporary file doesn't exist (we were invoked by the pid file) create a new one */
 				if (!File.new_for_path (temp_file).query_exists (null))
@@ -454,9 +480,12 @@ namespace VDEPN.Manager {
 
 				GLib.FileUtils.chmod (temp_file, 0700);
 
+				connector.connection_step (0.3, _("Cleaning"));
 				Process.spawn_command_line_sync (temp_file, null, null, null);
 
 				GLib.FileUtils.remove (temp_file);
+
+				connector.connection_step (0, null);
 
 				return true;
 			}
