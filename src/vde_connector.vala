@@ -150,8 +150,12 @@ namespace VDEPN.Manager {
 		private string ifconfig_cmd = Config.IFCONFIG_CMD;
 		private string temp_file;
 
+		/* Preferences instance */
+		private Preferences.CustomPreferences preferences;
+
 		/* The connection was already active, just take out the PIDs and create a new checker script */
 		public VDEConnection.from_pid_file(VDEConfiguration conf) {
+			preferences = Preferences.CustomPreferences.get_instance ();
 			try {
 				string pidtmp;
 				string checker_script;
@@ -171,6 +175,7 @@ namespace VDEPN.Manager {
 		public VDEConnection (VDEConfiguration conf) throws ConnectorError {
 			configuration = conf;
 			conn_id = conf.connection_name;
+			preferences = Preferences.CustomPreferences.get_instance ();
 
 			try {
 				string user_script;
@@ -202,7 +207,7 @@ namespace VDEPN.Manager {
 
 				/* Options for vde_switch */
 				vde_switch_pars = " -d -s " + configuration.socket_path;
-				if (Preferences.CustomPreferences.get_instance ().management_mode)
+				if (preferences.management_mode)
 					vde_switch_pars +=  " -M " + configuration.socket_path + ".mgmt";
 
 				vde_switch_pars += " ";
@@ -291,7 +296,7 @@ namespace VDEPN.Manager {
 					GLib.FileUtils.set_contents (temp_file, root_script, -1);
 					GLib.FileUtils.chmod (temp_file, 0700);
 					try {
-						try_root_execution (temp_file, Preferences.CustomPreferences.get_instance ().root_method);
+						try_root_execution (temp_file, preferences.root_method);
 					}
 
 					/* Connection successfull */
@@ -427,8 +432,11 @@ namespace VDEPN.Manager {
 					GLib.FileUtils.open_tmp ("vdepn-killer-XXXXXX.sh", out temp_file);
 
 				script = "#!/bin/sh\n\n";
-				/* Killing the vde_switch brings down every other process */
-				script += "kill -9 " + vde_switch_pid.to_string () + "\n";
+
+				/* Check if the vde_switch is still alive before killing it */
+				if (File.new_for_path ("/proc/" + vde_switch_pid.to_string ()).query_exists (null)) {
+					script += "kill -9 " + vde_switch_pid.to_string () + "\n";
+				}
 
 				/* Wait for the automatic cleaning to finish */
 				script += "sleep 3\n";
@@ -437,6 +445,10 @@ namespace VDEPN.Manager {
 				script += "rm -f /tmp/vdepn-" + conn_id + "*.pid\n";
 				if (configuration.socket_path != null && configuration.socket_path.chomp () != "")
 					script += "rm -rf " + configuration.socket_path + "\n";
+
+				/* Remove management socket */
+				if (preferences.management_mode)
+					script += "rm -rf " + configuration.socket_path + ".mgmt\n";
 
 				GLib.FileUtils.set_contents (temp_file, script, -1);
 
