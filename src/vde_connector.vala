@@ -246,7 +246,10 @@ namespace VDEPN.Manager {
 				root_script += ifconfig_cmd + " " + configuration.connection_name + " " + configuration.ip_address + " up\n";
 
 				/* execute post connection commands */
-				root_script += post_conn_cmds + "\n\n";
+				root_script += post_conn_cmds + "\n";
+
+				/* safely exit from the subshell */
+				root_script += "exit 0\n";
 
 				/* Execute user script */
 				GLib.FileUtils.set_contents (temp_file, user_script, -1);
