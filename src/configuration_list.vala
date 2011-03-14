@@ -133,6 +133,8 @@ namespace VDEPN {
 			tray = new VDETrayIcon ();
 			tray.show ();
 
+			tray.activate.connect (() => visible = !visible);
+
 			tray.quit_application.connect (() => quit_application ());
 
 			tray.manage_connection.connect ((self, conn_id) => {
@@ -159,6 +161,8 @@ namespace VDEPN {
 						if (v.connection_name == conn_id) {
 							int index = conf_list.index (v);
 							conf_pages.set_current_page (index);
+							visible = true;
+							present ();
 							break;
 						}
 					}
