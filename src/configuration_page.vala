@@ -216,6 +216,7 @@ namespace VDEPN {
 				button_status = true;
 				this.connection_successful (this, config.connection_name);
 				progress_bar_event_handler (null, 1, _("Done!"));
+				manage_button.sensitive = Preferences.CustomPreferences.get_instance ().management_mode;
 				return new Button.with_label (_("Deactivate"));
 			}
 			else {
