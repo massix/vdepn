@@ -129,6 +129,15 @@ namespace VDEPN {
 
 		/* Attach signals */
 		private void attach_signals (ConfigurationPage p) {
+			/* Check if the Connection is already alive */
+			if (p.check_if_alive ()) {
+				/* Workaround for a bug in Vala's lambda methods */
+				ConfigurationPage check = p;
+				Timeout.add (Helper.TIMEOUT, () => {
+						return (check.check_if_alive ());
+					});
+			}
+
 			p.connection_start.connect ((widget, conn_name) => {
 					widget.sensitive = false;
 					statusbar.push (0, _("Changing status of connection ") + conn_name);

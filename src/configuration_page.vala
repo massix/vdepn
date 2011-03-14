@@ -229,8 +229,8 @@ namespace VDEPN {
 		 * alive and, if the connection is no longer alive, it
 		 * deactivates it */
 		public bool check_if_alive () {
-			Manager.VDEConnection to_be_checked = connector.get_connection_from_name (config.connection_name);
 			try {
+				Manager.VDEConnection to_be_checked = connector.get_connection_from_name (config.connection_name);
 				if (to_be_checked.is_alive () && button_status)
 					return true;
 
@@ -247,7 +247,7 @@ namespace VDEPN {
 			/* The only exception  which may be thrown is  the one that tells us
 			 * that the connection isn't found in the active connections pool,
 			 * which means that the user has manually deactivated it */
-			catch (Error e) {
+			catch (Manager.ConnectorError e) {
 				return false;
 			}
 
