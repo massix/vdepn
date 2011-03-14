@@ -136,10 +136,8 @@ namespace VDEPN {
 			Gdk.threads_init ();
 
 			Notify.init ("VDE PN Manager");
-			ConfigurationsList mainWindow = new ConfigurationsList ("VDE PN Manager");
-			TrayIcon tray = new TrayIcon (mainWindow);
-			tray.show ();
-
+			ConfigurationsList main_window = new ConfigurationsList ("VDE PN Manager");
+			main_window.attach_tray_icon ();
 			Gdk.threads_enter ();
 			Gtk.main ();
 			Gdk.threads_leave ();

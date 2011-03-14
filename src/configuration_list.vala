@@ -64,6 +64,7 @@ namespace VDEPN {
 		private AccelGroup accel_group;
 		private VNotification notificator;
 		private Statusbar statusbar;
+		private VDETrayIcon tray;
 
 		public Manager.VDEConnector connections_manager { get; private set; }
 		public VDEParser conf_holder					{ get; private set; }
@@ -123,9 +124,46 @@ namespace VDEPN {
 			add (main_vbox);
 
 			statusbar.push (0, "VDEPN Does Extend Private Networking. " + _("Welcome, mate!"));
+
 			show_all ();
 		}
 
+		/* Shows the Icon in the tray */
+		public void attach_tray_icon () {
+			tray = new VDETrayIcon ();
+			tray.show ();
+
+			tray.quit_application.connect (() => quit_application ());
+
+			tray.manage_connection.connect ((self, conn_id) => {
+					foreach (ConfigurationPage v in pages_list) {
+						if (v.config.connection_name == conn_id) {
+							v.manage_connection ();
+							break;
+						}
+					}
+				});
+
+			tray.disconnect_connection.connect ((self, conn_id) => {
+					foreach (ConfigurationPage v in pages_list) {
+						if (v.config.connection_name == conn_id) {
+							v.close_connection ();
+							break;
+						}
+					}
+
+				});
+
+			tray.show_connection_page.connect ((self, conn_id) => {
+					foreach (VDEConfiguration v in conf_list) {
+						if (v.connection_name == conn_id) {
+							int index = conf_list.index (v);
+							conf_pages.set_current_page (index);
+							break;
+						}
+					}
+				});
+		}
 
 		/* Attach signals */
 		private void attach_signals (ConfigurationPage p) {

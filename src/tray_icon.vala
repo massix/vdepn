@@ -21,23 +21,23 @@ using Gtk;
 
 namespace VDEPN {
 	// creates a new icon in the system tray, linked to the parent
-	public class TrayIcon : Gtk.StatusIcon {
-		private ConfigurationsList parent;
-		private Manager.VDEConnector parent_connector;
+	public class VDETrayIcon : Gtk.StatusIcon {
+		private Manager.VDEConnector connector;
 
-		public TrayIcon (ConfigurationsList linked) {
+		/* Signals for the topmost widgets */
+		public signal void manage_connection (VDETrayIcon self, string conn_id);
+		public signal void disconnect_connection (VDETrayIcon self, string conn_id);
+		public signal void show_connection_page (VDETrayIcon self, string conn_id);
+		public signal void quit_application (VDETrayIcon self);
+
+		public VDETrayIcon () {
 			/* Chain up to the default constructor */
 			GLib.Object ();
 			set_from_file (Helper.ICON_PATH);
 			has_tooltip = false;
 			title = "VDE PN Manager";
-			parent = linked;
 
-			parent_connector = parent.connections_manager;
-
-			activate.connect (() => {
-					parent.visible = !parent.visible;
-				});
+			connector = Manager.VDEConnector.get_instance ();
 
 			/* Builds a Menu showing currently active connections or
 			   "No active connections" if none are active */
@@ -54,28 +54,37 @@ namespace VDEPN {
 					inner_menu.append (sep);
 
 					quit_item.activate.connect (() => {
-							linked.quit_application ();
+							this.quit_application (this);
 						});
 
-					if (parent_connector.count_active_connections () <= 0) {
+					if (connector.count_active_connections () <= 0) {
 						MenuItem no_act_conn = new MenuItem.with_label (_("No active Connections"));
 						no_act_conn.show ();
 						inner_menu.append (no_act_conn);
 					}
 
 					else {
-						for (int i = 0; i < parent_connector.count_active_connections (); i++) {
-							Manager.VDEConnection temp = parent_connector.get_connection (i);
+						for (int i = 0; i < connector.count_active_connections (); i++) {
+							Manager.VDEConnection temp = connector.get_connection (i);
 							MenuItem conn = new MenuItem.with_label (temp.conn_id);
+							Menu inner_conn_menu = new Menu ();
+							MenuItem manage = new MenuItem.with_label (_("Manage"));
+							MenuItem show_page = new MenuItem.with_label (_("Show page"));
+							MenuItem disconnect = new MenuItem.with_label (_("Disconnect"));
 							conn.show ();
+							manage.show ();
+							show_page.show ();
+							disconnect.show ();
 							inner_menu.append (conn);
-							conn.activate.connect (() => {
-									if (!parent.visible)
-										parent.visible = true;
-									parent.present ();
-									parent.switch_page (temp.conn_id);
-									inner_menu.hide ();
-								});
+							conn.submenu = inner_conn_menu;
+							inner_conn_menu.append (manage);
+							inner_conn_menu.append (show_page);
+							inner_conn_menu.append (disconnect);
+
+							/* Link signals */
+							manage.activate.connect (() => this.manage_connection (this, temp.conn_id));
+							show_page.activate.connect (() => this.show_connection_page (this, temp.conn_id));
+							disconnect.activate.connect (() => this.disconnect_connection (this, temp.conn_id));
 						}
 					}
 

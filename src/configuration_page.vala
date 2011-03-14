@@ -192,12 +192,26 @@ namespace VDEPN {
 				});
 
 			/* Open up a terminal showing the unixterm for the switch */
-			manage_button.clicked.connect (() => {
-					string terminal = Preferences.CustomPreferences.get_instance ().terminal;
-					Process.spawn_command_line_async (terminal + " -e 'unixterm " + socket_property.get_value () + ".mgmt'");
-				});
+			manage_button.clicked.connect (() => manage_connection ());
 
 			show_all ();
+		}
+
+		/* Close the connection in a clean way */
+		public void close_connection () {
+			button_status = false;
+			activate_button.label = _("Activate");
+			connector.rm_connection (config.connection_name);
+			this.connection_deactivated (this, config.connection_name);
+			progress_bar_event_handler (null, 0, null);
+			connector.connection_step.disconnect (progress_bar_event_handler);
+			manage_button.sensitive = false;
+		}
+
+		/* Open up a terminal showing the unixterm for that switch */
+		public void manage_connection () {
+			string terminal = Preferences.CustomPreferences.get_instance ().terminal;
+			Process.spawn_command_line_async (terminal + " -e 'unixterm " + socket_property.get_value () + ".mgmt'");
 		}
 
 		/* This is necessary to attach and detach connector signals */
@@ -239,6 +253,7 @@ namespace VDEPN {
 					activate_button.label = _("Activate");
 					connector.rm_connection (config.connection_name);
 					this.connection_deactivated (this, config.connection_name);
+					this.manage_button.sensitive = false;
 					progress_bar_event_handler (null, 0, null);
 					return false;
 				}
