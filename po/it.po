@@ -93,18 +93,19 @@ msgstr "Mostra avanzate"
 #: ../src/configuration_page.vala:198 ../src/configuration_page.vala:263
 #: ../src/configuration_page.vala:152 ../src/configuration_page.vala:200
 #: ../src/configuration_page.vala:161 ../src/configuration_page.vala:219
+#: ../src/configuration_page.vala:234
 msgid "Deactivate"
 msgstr "Disattiva"
 
 #: ../src/configuration_page.vala:315 ../src/configuration_page.vala:205
 #: ../src/configuration_page.vala:212 ../src/configuration_page.vala:214
-#: ../src/configuration_list.vala:153
+#: ../src/configuration_list.vala:153 ../src/configuration_list.vala:204
 msgid "Error while activating connection"
 msgstr "Errore durante l'attivazione della connessione"
 
 #: ../src/configuration_page.vala:317 ../src/configuration_page.vala:207
 #: ../src/configuration_page.vala:214 ../src/configuration_page.vala:216
-#: ../src/configuration_list.vala:155
+#: ../src/configuration_list.vala:155 ../src/configuration_list.vala:206
 msgid "Close"
 msgstr "Chiudi"
 
@@ -115,63 +116,69 @@ msgstr "Chiudi"
 #: ../src/configuration_page.vala:267 ../src/configuration_page.vala:282
 #: ../src/configuration_page.vala:171 ../src/configuration_page.vala:204
 #: ../src/configuration_page.vala:219 ../src/configuration_page.vala:181
-#: ../src/configuration_page.vala:238
+#: ../src/configuration_page.vala:238 ../src/configuration_page.vala:203
+#: ../src/configuration_page.vala:253
 msgid "Activate"
 msgstr "Attiva"
 
 #: ../src/configuration_list.vala:91 ../src/configuration_list.vala:187
+#: ../src/configuration_list.vala:238
 msgid "_File"
-msgstr "_Archivio"
+msgstr "_File"
 
 #: ../src/configuration_list.vala:138 ../src/configuration_list.vala:139
-#: ../src/configuration_list.vala:235
+#: ../src/configuration_list.vala:235 ../src/configuration_list.vala:286
 msgid "Connection removal"
 msgstr "Rimozione della connessione"
 
 #: ../src/configuration_list.vala:139 ../src/configuration_list.vala:140
-#: ../src/configuration_list.vala:236
+#: ../src/configuration_list.vala:236 ../src/configuration_list.vala:287
 msgid "This cannot be undone!"
 msgstr "Questa operazione non può essere annullata!"
 
 #: ../src/configuration_list.vala:140 ../src/configuration_list.vala:141
-#: ../src/configuration_list.vala:237
+#: ../src/configuration_list.vala:237 ../src/configuration_list.vala:288
 msgid "Yes, I'm sure"
 msgstr "Sì, sono sicuro."
 
 #: ../src/configuration_list.vala:141 ../src/configuration_list.vala:182
 #: ../src/configuration_list.vala:142 ../src/configuration_list.vala:185
 #: ../src/configuration_list.vala:238 ../src/configuration_list.vala:281
+#: ../src/configuration_list.vala:289 ../src/configuration_list.vala:332
 msgid "Abort"
 msgstr "Annulla"
 
 #: ../src/configuration_list.vala:170 ../src/configuration_list.vala:173
-#: ../src/configuration_list.vala:269
+#: ../src/configuration_list.vala:269 ../src/configuration_list.vala:320
 msgid "New Configuration"
 msgstr "Nuova configurazione"
 
 #: ../src/configuration_list.vala:179 ../src/configuration_list.vala:182
-#: ../src/configuration_list.vala:278
+#: ../src/configuration_list.vala:278 ../src/configuration_list.vala:329
 msgid "New configuration ID"
 msgstr "ID della nuova configurazione"
 
 #: ../src/configuration_list.vala:181 ../src/configuration_list.vala:184
-#: ../src/configuration_list.vala:280
+#: ../src/configuration_list.vala:280 ../src/configuration_list.vala:331
 msgid "Create"
 msgstr "Crea"
 
 #: ../src/configuration_list.vala:209 ../src/configuration_list.vala:210
 #: ../src/configuration_list.vala:214 ../src/configuration_list.vala:311
+#: ../src/configuration_list.vala:362
 msgid "_Help"
 msgstr "_Aiuto"
 
 #: ../src/configuration_list.vala:253 ../src/configuration_list.vala:298
 #: ../src/configuration_list.vala:254 ../src/tray_icon.vala:46
 #: ../src/configuration_list.vala:260 ../src/configuration_list.vala:379
+#: ../src/configuration_list.vala:430
 msgid "Active Connections"
 msgstr "Connessioni attive"
 
 #: ../src/configuration_list.vala:254 ../src/configuration_list.vala:255
 #: ../src/configuration_list.vala:261 ../src/configuration_list.vala:380
+#: ../src/configuration_list.vala:431
 msgid "There are active connections!"
 msgstr "Ci sono delle connessioni attive!"
 
@@ -182,6 +189,7 @@ msgstr "Esci comunque"
 
 #: ../src/configuration_list.vala:256 ../src/configuration_list.vala:257
 #: ../src/configuration_list.vala:263 ../src/configuration_list.vala:383
+#: ../src/configuration_list.vala:434
 msgid "Cancel"
 msgstr "Cancella"
 
@@ -293,35 +301,35 @@ msgstr "<b>Indirizzo IPv4</b> TUN/TAP"
 msgid "Could not gain local root priviledges"
 msgstr "Impossibile ottenere privilegi di root locali"
 
-#: ../src/configuration_list.vala:125
+#: ../src/configuration_list.vala:125 ../src/configuration_list.vala:126
 msgid "Welcome, mate!"
 msgstr "Benvenuto, amico!"
 
-#: ../src/configuration_list.vala:134
+#: ../src/configuration_list.vala:134 ../src/configuration_list.vala:185
 msgid "Changing status of connection "
 msgstr "Cambio lo stato della connessione "
 
-#: ../src/configuration_list.vala:138
+#: ../src/configuration_list.vala:138 ../src/configuration_list.vala:189
 msgid "You are now connected to "
 msgstr "Sei ora connesso a "
 
-#: ../src/configuration_list.vala:147
+#: ../src/configuration_list.vala:147 ../src/configuration_list.vala:198
 msgid "Error while connecting to "
 msgstr "Errore durante la connessione a "
 
-#: ../src/configuration_list.vala:175
+#: ../src/configuration_list.vala:175 ../src/configuration_list.vala:226
 msgid "You are no longer connected to "
 msgstr "Non sei più connesso a "
 
-#: ../src/configuration_list.vala:348
+#: ../src/configuration_list.vala:348 ../src/configuration_list.vala:399
 msgid "_Edit"
 msgstr "_Modifica"
 
-#: ../src/configuration_list.vala:381
+#: ../src/configuration_list.vala:381 ../src/configuration_list.vala:432
 msgid "Disconnect and quit"
 msgstr "Disconnetti ed esci"
 
-#: ../src/configuration_list.vala:382
+#: ../src/configuration_list.vala:382 ../src/configuration_list.vala:433
 msgid "Quit only"
 msgstr "Esci solamente"
 
@@ -390,6 +398,7 @@ msgid "Authentication failed"
 msgstr "Autenticazione fallita"
 
 #: ../src/configuration_page.vala:218 ../src/vde_connector.vala:324
+#: ../src/configuration_page.vala:232
 msgid "Done!"
 msgstr "Fatto!"
 
@@ -424,3 +433,15 @@ msgstr "Disconnessione"
 #: ../src/vde_connector.vala:483
 msgid "Cleaning"
 msgstr "Pulizia"
+
+#: ../src/tray_icon.vala:71
+msgid "Manage"
+msgstr "Gestisci"
+
+#: ../src/tray_icon.vala:72
+msgid "Show page"
+msgstr "Mostra pagina"
+
+#: ../src/tray_icon.vala:73
+msgid "Disconnect"
+msgstr "Disconnetti"
