@@ -97,7 +97,8 @@ namespace VDEPN {
 			title = caption;
 			resize (200,200);
 			this.delete_event.connect((ev) => {
-					visible = false;;
+					quit_application ();
+
 					return true;
 				});
 
