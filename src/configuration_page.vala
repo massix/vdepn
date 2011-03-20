@@ -102,6 +102,14 @@ namespace VDEPN {
 
 			button_ssh.active = config.use_keys;
 			button_checkhost.active = config.checkhost;
+			button_ssh.sensitive = button_checkhost.active;
+
+			button_checkhost.toggled.connect ((widget) => {
+					button_ssh.sensitive = widget.active;
+					if (button_ssh.sensitive)
+						button_ssh.active = config.use_keys;
+				});
+
 
 			inner_buttons_box = new HBox (true, 4);
 			manage_button = new Button.with_label (_("Manage Switch"));
