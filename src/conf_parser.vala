@@ -70,6 +70,7 @@ namespace VDEPN {
 		protected VDEConfiguration (Xml.Node *conf_root) throws VDEConfigurationError {
 			socket_path = null;
 			Xml.Attr* id;
+			Xml.Attr *copykeys;
 			/* parse node and create a configuration */
 
 			/* unique name for the connection */
@@ -78,6 +79,13 @@ namespace VDEPN {
 				connection_name = id->children->get_content ();
 			else
 				throw new VDEConfigurationError.NULL_ID ("Connection ID can't be omitted");
+
+			/* does the user want to copy its own ssh keys ot the server */
+			copykeys = conf_root->has_prop ("copykeys");
+			if (copykeys != null && copykeys->children->get_content ().chomp () == "true")
+				use_keys = true;
+			else
+				use_keys = false;
 
 			while (conf_root->child_element_count () > 0) {
 				Xml.Node *conf_node = conf_root->first_element_child ();
@@ -124,20 +132,6 @@ namespace VDEPN {
 					post_conn_cmds = conf_node->get_content ();
 					break;
 				case "password":
-					Xml.Attr *required;
-					Xml.Attr *usekeys;
-					required = conf_node->has_prop ("required");
-					usekeys = conf_node->has_prop ("usekeys");
-					if ((required != null) && (required->children->get_content () == "false")) {
-						if ((usekeys != null) && (usekeys->children->get_content () == "true"))
-							use_keys = true;
-						else
-							use_keys = false;
-
-					}
-					else
-						password = conf_node->get_content ();
-
 					break;
 				default:
 					throw new VDEConfigurationError.UNRECOGNIZED_OPTION ("Option not known");
@@ -153,8 +147,6 @@ namespace VDEPN {
 				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS ("field user is missing");
 			if (ip_address == null)
 				throw new VDEConfigurationError.NOT_ENOUGH_PARAMETERS ("ip address is missing");
-			if ((password == null) && (use_keys == false))
-				Helper.debug (Helper.TAG_WARNING, "configuration with empty password set");
 		}
 
 		public void update_configuration (string new_sock, string new_remote_socket,
@@ -185,6 +177,7 @@ namespace VDEPN {
 		public Xml.Node* store_configuration (VDEParser? p) {
 			Xml.Node *root_node = new Xml.Node (null, "connection");
 			root_node->set_prop ("id", connection_name);
+			root_node->set_prop ("copykeys", use_keys.to_string ());
 
 			Xml.Node *sock_path_node = new Xml.Node (null, "sockpath");
 			sock_path_node->set_content (socket_path);
@@ -204,10 +197,6 @@ namespace VDEPN {
 			machine_node->set_prop ("checkrequired", checkhost.to_string ());
 			machine_node->set_prop ("port", port);
 
-			Xml.Node *password_node = new Xml.Node (null, "password");
-			password_node->set_prop ("required", "false");
-			password_node->set_prop ("usekeys", "false");
-
 			Xml.Node *pre_conn_node = new Xml.Node (null, "pre_conn_cmds");
 			pre_conn_node->set_content (pre_conn_cmds);
 
@@ -221,7 +210,6 @@ namespace VDEPN {
 			root_node->add_child (machine_node);
 			root_node->add_child (pre_conn_node);
 			root_node->add_child (post_conn_node);
-			root_node->add_child (password_node);
 
 			if (p != null) {
 				p.update_file (root_node, this, false);
