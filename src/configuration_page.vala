@@ -94,7 +94,7 @@ namespace VDEPN {
 			post_conn_cmds = new TextViewProperty (_("<b>Post-connection</b> commands"), value);
 
 			checkbuttons_box = new HBox (true, 2);
-			button_ssh = new CheckButton.with_label (_("Use SSH keys"));
+			button_ssh = new CheckButton.with_label (_("Use VDEPN's keys"));
 			button_checkhost = new CheckButton.with_label (_("Check Host"));
 
 			checkbuttons_box.pack_start (button_ssh, true, true, 0);
