@@ -210,7 +210,7 @@ namespace VDEPN.Manager {
 				connector.connection_step (0.5, _("Creating user script"));
 
 				/* Build up the two vde_plug cmds (local and remote) */
-				string remote_vde_plug_cmd = "vde_plug";
+				string remote_vde_plug_cmd = vde_plug_cmd;
 				if (configuration.remote_socket_path.chomp () != "")
 					remote_vde_plug_cmd += " " + configuration.remote_socket_path.chomp ();
 
