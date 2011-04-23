@@ -163,7 +163,7 @@ namespace VDEPN.Preferences {
 			management_vbox = new VBox (false, 2);
 			management_container = new Frame (_("Management mode"));
 			default_terminal = new EntryProperty (_("Default terminal"), instance.terminal);
-			management_mode = new CheckButton.with_label (_("Create management switchs"));
+			management_mode = new CheckButton.with_label (_("Create management switches"));
 			management_mode.active = instance.management_mode;
 			/* Pack the widgets into a VBox and pack the VBox into the frame */
 			management_vbox.pack_start ((Widget) default_terminal, false, false, 0);
